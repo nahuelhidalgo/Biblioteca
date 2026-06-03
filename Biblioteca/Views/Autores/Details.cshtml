@@ -1,0 +1,23 @@
+@model Autor
+
+@{
+    ViewData["Title"] = "Detalle de autor";
+}
+
+<h1>Detalle de autor</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Nombre</dt>
+    <dd class="col-sm-9">@Model.Nombre</dd>
+    <dt class="col-sm-3">Apellido</dt>
+    <dd class="col-sm-9">@Model.Apellido</dd>
+    <dt class="col-sm-3">Nacionalidad</dt>
+    <dd class="col-sm-9">@Model.Nacionalidad</dd>
+    <dt class="col-sm-3">Activo</dt>
+    <dd class="col-sm-9">@(Model.Activo ? "Si" : "No")</dd>
+    <dt class="col-sm-3">Libros asociados</dt>
+    <dd class="col-sm-9">@Model.Libros.Count</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.IdAutor" class="btn btn-primary">Editar</a>
+<a asp-action="Index" class="btn btn-secondary">Volver</a>

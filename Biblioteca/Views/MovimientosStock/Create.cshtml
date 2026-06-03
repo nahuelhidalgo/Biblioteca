@@ -1,0 +1,39 @@
+@model MovimientoStock
+
+@{
+    ViewData["Title"] = "Registrar movimiento de stock";
+}
+
+<h1>Registrar movimiento de stock</h1>
+
+<form asp-action="Create">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="IdLibro" class="form-label">Libro</label>
+        <select asp-for="IdLibro" class="form-select" asp-items="ViewBag.IdLibro"></select>
+        <span asp-validation-for="IdLibro" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="TipoMovimiento" class="form-label"></label>
+        <select asp-for="TipoMovimiento" class="form-select" asp-items="Html.GetEnumSelectList<TipoMovimientoStock>()">
+            <option value="">Seleccionar...</option>
+        </select>
+        <span asp-validation-for="TipoMovimiento" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Cantidad" class="form-label"></label>
+        <input asp-for="Cantidad" class="form-control" />
+        <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Motivo" class="form-label"></label>
+        <textarea asp-for="Motivo" class="form-control"></textarea>
+        <span asp-validation-for="Motivo" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

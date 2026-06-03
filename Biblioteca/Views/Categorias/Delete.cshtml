@@ -1,0 +1,20 @@
+@model Categoria
+
+@{
+    ViewData["Title"] = "Baja de categoria";
+}
+
+<h1>Baja de categoria</h1>
+
+<p>Se marcara la categoria como inactiva.</p>
+
+<dl class="row">
+    <dt class="col-sm-3">Categoria</dt>
+    <dd class="col-sm-9">@Model.Nombre</dd>
+</dl>
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="IdCategoria" />
+    <button type="submit" class="btn btn-danger">Confirmar baja</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>

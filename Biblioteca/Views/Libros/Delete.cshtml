@@ -1,0 +1,22 @@
+@model Libro
+
+@{
+    ViewData["Title"] = "Baja de libro";
+}
+
+<h1>Baja de libro</h1>
+
+<p>Se marcara el libro como inactivo.</p>
+
+<dl class="row">
+    <dt class="col-sm-3">Libro</dt>
+    <dd class="col-sm-9">@Model.Titulo</dd>
+    <dt class="col-sm-3">Autor</dt>
+    <dd class="col-sm-9">@Model.Autor.Apellido, @Model.Autor.Nombre</dd>
+</dl>
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="IdLibro" />
+    <button type="submit" class="btn btn-danger">Confirmar baja</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>

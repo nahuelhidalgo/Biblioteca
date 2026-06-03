@@ -1,0 +1,41 @@
+@model IEnumerable<Prestamo>
+
+@{
+    ViewData["Title"] = "Prestamos";
+}
+
+<h1>Prestamos</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Nuevo prestamo</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nro.</th>
+            <th>Empleado</th>
+            <th>Fecha</th>
+            <th>Estimado</th>
+            <th>Estado</th>
+            <th>Libros</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@item.IdPrestamo</td>
+            <td>@item.Empleado.Apellido, @item.Empleado.Nombre</td>
+            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+            <td>@item.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</td>
+            <td>@item.Estado</td>
+            <td>@item.ItemsPrestamo.Count</td>
+            <td class="text-end">
+                <a asp-action="Details" asp-route-id="@item.IdPrestamo">Detalle</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

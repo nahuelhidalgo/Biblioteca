@@ -1,0 +1,54 @@
+@model Prestamo
+
+@{
+    ViewData["Title"] = "Detalle de prestamo";
+}
+
+<h1>Detalle de prestamo</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Nro.</dt>
+    <dd class="col-sm-9">@Model.IdPrestamo</dd>
+    <dt class="col-sm-3">Empleado</dt>
+    <dd class="col-sm-9">@Model.Empleado.Apellido, @Model.Empleado.Nombre</dd>
+    <dt class="col-sm-3">Fecha</dt>
+    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
+    <dt class="col-sm-3">Fecha estimada</dt>
+    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
+    <dt class="col-sm-3">Fecha devolucion</dt>
+    <dd class="col-sm-9">@Model.FechaDevolucion?.ToString("dd/MM/yyyy")</dd>
+    <dt class="col-sm-3">Estado</dt>
+    <dd class="col-sm-9">@Model.Estado</dd>
+</dl>
+
+<h2>Libros</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Libro</th>
+            <th>Estado</th>
+            <th>Fecha devolucion</th>
+            <th>Dias retraso</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.ItemsPrestamo)
+{
+        <tr>
+            <td>@item.Libro.Titulo</td>
+            <td>@item.EstadoItem</td>
+            <td>@item.FechaDevolucion?.ToString("dd/MM/yyyy")</td>
+            <td>@item.DiasRetraso</td>
+            <td class="text-end">
+                @if (item.FechaDevolucion is null)
+                {
+                    <a asp-action="Devolver" asp-route-id="@item.IdItemPrestamo">Registrar devolucion</a>
+                }
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">Volver</a>

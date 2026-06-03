@@ -1,0 +1,22 @@
+@model MovimientoStock
+
+@{
+    ViewData["Title"] = "Detalle de movimiento";
+}
+
+<h1>Detalle de movimiento</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Fecha</dt>
+    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
+    <dt class="col-sm-3">Libro</dt>
+    <dd class="col-sm-9">@Model.Libro.Titulo</dd>
+    <dt class="col-sm-3">Tipo</dt>
+    <dd class="col-sm-9">@Model.TipoMovimiento</dd>
+    <dt class="col-sm-3">Cantidad</dt>
+    <dd class="col-sm-9">@Model.Cantidad</dd>
+    <dt class="col-sm-3">Motivo</dt>
+    <dd class="col-sm-9">@Model.Motivo</dd>
+</dl>
+
+<a asp-action="Index" class="btn btn-secondary">Volver</a>

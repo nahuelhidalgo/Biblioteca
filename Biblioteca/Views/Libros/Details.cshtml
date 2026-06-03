@@ -1,0 +1,52 @@
+@model Libro
+
+@{
+    ViewData["Title"] = "Detalle de libro";
+}
+
+<h1>Detalle de libro</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">ISBN</dt>
+    <dd class="col-sm-9">@Model.ISBN</dd>
+    <dt class="col-sm-3">Titulo</dt>
+    <dd class="col-sm-9">@Model.Titulo</dd>
+    <dt class="col-sm-3">Autor</dt>
+    <dd class="col-sm-9">@Model.Autor.Apellido, @Model.Autor.Nombre</dd>
+    <dt class="col-sm-3">Categoria</dt>
+    <dd class="col-sm-9">@Model.Categoria.Nombre</dd>
+    <dt class="col-sm-3">Editorial</dt>
+    <dd class="col-sm-9">@Model.Editorial.Nombre</dd>
+    <dt class="col-sm-3">Anio</dt>
+    <dd class="col-sm-9">@Model.AnioPublicacion</dd>
+    <dt class="col-sm-3">Stock</dt>
+    <dd class="col-sm-9">@Model.StockDisponible disponible de @Model.StockTotal</dd>
+    <dt class="col-sm-3">Activo</dt>
+    <dd class="col-sm-9">@(Model.Activo ? "Si" : "No")</dd>
+</dl>
+
+<h2>Movimientos de stock</h2>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Cantidad</th>
+            <th>Motivo</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var movimiento in Model.MovimientosStock)
+{
+        <tr>
+            <td>@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@movimiento.TipoMovimiento</td>
+            <td>@movimiento.Cantidad</td>
+            <td>@movimiento.Motivo</td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<a asp-action="Edit" asp-route-id="@Model.IdLibro" class="btn btn-primary">Editar</a>
+<a asp-action="Index" class="btn btn-secondary">Volver</a>

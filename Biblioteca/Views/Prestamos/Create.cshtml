@@ -1,0 +1,37 @@
+@model PrestamoCreateViewModel
+
+@{
+    ViewData["Title"] = "Nuevo prestamo";
+}
+
+<h1>Nuevo prestamo</h1>
+
+<form asp-action="Create">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="LegajoEmpleado" class="form-label"></label>
+        <select asp-for="LegajoEmpleado" class="form-select" asp-items="ViewBag.LegajoEmpleado"></select>
+        <span asp-validation-for="LegajoEmpleado" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="LibrosIds" class="form-label"></label>
+        <select asp-for="LibrosIds" class="form-select" asp-items="ViewBag.Libros" multiple size="6"></select>
+        <span asp-validation-for="LibrosIds" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="FechaPrestamo" class="form-label"></label>
+        <input asp-for="FechaPrestamo" class="form-control" />
+        <span asp-validation-for="FechaPrestamo" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="FechaEstimadaDevolucion" class="form-label"></label>
+        <input asp-for="FechaEstimadaDevolucion" class="form-control" />
+        <span asp-validation-for="FechaEstimadaDevolucion" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar prestamo</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

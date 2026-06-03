@@ -1,0 +1,51 @@
+@model IEnumerable<Libro>
+
+@{
+    ViewData["Title"] = "Libros";
+}
+
+<h1>Libros</h1>
+
+<form asp-action="Index" method="get" class="row g-2 mb-3">
+    <div class="col-md-8">
+        <input name="busqueda" value="@ViewBag.Busqueda" class="form-control" placeholder="Buscar por titulo, autor, categoria o ISBN" />
+    </div>
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-outline-primary">Buscar</button>
+        <a asp-action="Create" class="btn btn-primary">Crear libro</a>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ISBN</th>
+            <th>Titulo</th>
+            <th>Autor</th>
+            <th>Categoria</th>
+            <th>Editorial</th>
+            <th>Stock</th>
+            <th>Activo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@item.ISBN</td>
+            <td>@item.Titulo</td>
+            <td>@item.Autor.Apellido, @item.Autor.Nombre</td>
+            <td>@item.Categoria.Nombre</td>
+            <td>@item.Editorial.Nombre</td>
+            <td>@item.StockDisponible / @item.StockTotal</td>
+            <td>@(item.Activo ? "Si" : "No")</td>
+            <td class="text-end">
+                <a asp-action="Edit" asp-route-id="@item.IdLibro">Editar</a> |
+                <a asp-action="Details" asp-route-id="@item.IdLibro">Detalle</a> |
+                <a asp-action="Delete" asp-route-id="@item.IdLibro">Baja</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
