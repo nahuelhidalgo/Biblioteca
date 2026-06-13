@@ -7,11 +7,12 @@ public class Usuario
     public int IdUsuarioSistema { get; set; }
 
     [Required]
-    [EmailAddress]
+    [Display(Name = "Cuenta")]
     [StringLength(150)]
     public string Email { get; set; } = string.Empty;
 
     [Required]
+    [Display(Name = "Contrasenia")]
     [StringLength(255)]
     public string Password { get; set; } = string.Empty;
 

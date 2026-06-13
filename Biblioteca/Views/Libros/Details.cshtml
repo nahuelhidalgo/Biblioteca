@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Detalle de libro";
+    var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Detalle de libro</h1>
@@ -25,28 +26,34 @@
     <dd class="col-sm-9">@(Model.Activo ? "Si" : "No")</dd>
 </dl>
 
-<h2>Movimientos de stock</h2>
-<table class="table table-sm">
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Tipo</th>
-            <th>Cantidad</th>
-            <th>Motivo</th>
-        </tr>
-    </thead>
-    <tbody>
+@if (esAdministrador)
+{
+    <h2>Movimientos de stock</h2>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Motivo</th>
+            </tr>
+        </thead>
+        <tbody>
 @foreach (var movimiento in Model.MovimientosStock)
 {
-        <tr>
-            <td>@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@movimiento.TipoMovimiento</td>
-            <td>@movimiento.Cantidad</td>
-            <td>@movimiento.Motivo</td>
-        </tr>
+            <tr>
+                <td>@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@movimiento.TipoMovimiento</td>
+                <td>@movimiento.Cantidad</td>
+                <td>@movimiento.Motivo</td>
+            </tr>
 }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+}
 
-<a asp-action="Edit" asp-route-id="@Model.IdLibro" class="btn btn-primary">Editar</a>
+@if (esAdministrador)
+{
+    <a asp-action="Edit" asp-route-id="@Model.IdLibro" class="btn btn-primary">Editar</a>
+}
 <a asp-action="Index" class="btn btn-secondary">Volver</a>

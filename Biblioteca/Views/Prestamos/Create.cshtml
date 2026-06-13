@@ -9,9 +9,8 @@
 <form asp-action="Create">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="mb-3">
-        <label asp-for="LegajoEmpleado" class="form-label"></label>
-        <select asp-for="LegajoEmpleado" class="form-select" asp-items="ViewBag.LegajoEmpleado"></select>
-        <span asp-validation-for="LegajoEmpleado" class="text-danger"></span>
+        <label class="form-label">Empleado</label>
+        <input value="@ViewBag.EmpleadoLogueado" class="form-control" readonly />
     </div>
     <div class="mb-3">
         <label asp-for="LibrosIds" class="form-label"></label>

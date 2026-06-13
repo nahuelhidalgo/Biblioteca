@@ -5,10 +5,6 @@ namespace Biblioteca.ViewModels;
 public class PrestamoCreateViewModel
 {
     [Required]
-    [Display(Name = "Empleado")]
-    public int LegajoEmpleado { get; set; }
-
-    [Required]
     [Display(Name = "Libros")]
     public List<int> LibrosIds { get; set; } = new();
 

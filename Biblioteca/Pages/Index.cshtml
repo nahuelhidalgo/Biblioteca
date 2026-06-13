@@ -1,10 +1,23 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Inicio";
+    var cuenta = HttpContext.Session.GetString(SesionKeys.Cuenta);
+    var rol = HttpContext.Session.GetString(SesionKeys.Rol);
+    var estaAutenticado = !string.IsNullOrWhiteSpace(cuenta);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center py-5">
+    <h1 class="display-5">Biblioteca</h1>
+    @if (estaAutenticado)
+    {
+        <p class="lead">Sesion iniciada como @cuenta (@rol).</p>
+        <a asp-controller="Libros" asp-action="Index" class="btn btn-primary">Ver libros</a>
+        <a asp-controller="Prestamos" asp-action="Index" class="btn btn-outline-primary">Ver prestamos</a>
+    }
+    else
+    {
+        <p class="lead">Ingresa con una cuenta para operar el sistema.</p>
+        <a asp-controller="Cuentas" asp-action="Login" class="btn btn-primary">Iniciar sesion</a>
+    }
 </div>

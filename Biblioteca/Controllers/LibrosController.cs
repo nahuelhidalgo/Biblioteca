@@ -1,11 +1,14 @@
 using Biblioteca.Datos;
+using Biblioteca.Filtros;
 using Biblioteca.Modelos;
+using Biblioteca.Seguridad;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteca.Controllers;
 
+[SesionAuthorize]
 public class LibrosController : Controller
 {
     private readonly BibliotecaContext _context;
@@ -56,12 +59,14 @@ public class LibrosController : Controller
         return libro is null ? NotFound() : View(libro);
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Create()
     {
         await CargarListasAsync();
         return View();
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("IdLibro,ISBN,Titulo,IdEditorial,IdCategoria,IdAutor,AnioPublicacion,Activo")] Libro libro)
@@ -80,6 +85,7 @@ public class LibrosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id is null)
@@ -98,6 +104,7 @@ public class LibrosController : Controller
         return View(libro);
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("IdLibro,ISBN,Titulo,IdEditorial,IdCategoria,IdAutor,AnioPublicacion,StockTotal,StockDisponible,Activo")] Libro libro)
@@ -118,6 +125,7 @@ public class LibrosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id is null)
@@ -133,6 +141,7 @@ public class LibrosController : Controller
         return libro is null ? NotFound() : View(libro);
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)

@@ -1,5 +1,7 @@
 using Biblioteca.Datos;
+using Biblioteca.Filtros;
 using Biblioteca.Modelos;
+using Biblioteca.Seguridad;
 using Biblioteca.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -7,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteca.Controllers;
 
+[SesionAuthorize]
 public class PrestamosController : Controller
 {
     private readonly BibliotecaContext _context;
@@ -48,7 +51,14 @@ public class PrestamosController : Controller
 
     public async Task<IActionResult> Create()
     {
-        await CargarListasPrestamoAsync();
+        var legajoEmpleado = ObtenerLegajoEmpleadoDesdeSesion();
+
+        if (legajoEmpleado is null)
+        {
+            return RedirectToAction("Login", "Cuentas");
+        }
+
+        await CargarDatosPrestamoAsync(legajoEmpleado.Value);
         return View(new PrestamoCreateViewModel());
     }
 
@@ -56,6 +66,13 @@ public class PrestamosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PrestamoCreateViewModel prestamoModel)
     {
+        var legajoEmpleado = ObtenerLegajoEmpleadoDesdeSesion();
+
+        if (legajoEmpleado is null)
+        {
+            return RedirectToAction("Login", "Cuentas");
+        }
+
         if (prestamoModel.LibrosIds.Count == 0)
         {
             ModelState.AddModelError(nameof(PrestamoCreateViewModel.LibrosIds), "Debe seleccionar al menos un libro.");
@@ -63,14 +80,14 @@ public class PrestamosController : Controller
 
         if (!ModelState.IsValid)
         {
-            await CargarListasPrestamoAsync(prestamoModel);
+            await CargarDatosPrestamoAsync(legajoEmpleado.Value, prestamoModel);
             return View(prestamoModel);
         }
 
         try
         {
             await RegistrarPrestamoAsync(
-                prestamoModel.LegajoEmpleado,
+                legajoEmpleado.Value,
                 prestamoModel.LibrosIds,
                 prestamoModel.FechaPrestamo,
                 prestamoModel.FechaEstimadaDevolucion);
@@ -80,11 +97,12 @@ public class PrestamosController : Controller
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            await CargarListasPrestamoAsync(prestamoModel);
+            await CargarDatosPrestamoAsync(legajoEmpleado.Value, prestamoModel);
             return View(prestamoModel);
         }
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Devolver(int? id)
     {
         if (id is null)
@@ -116,6 +134,7 @@ public class PrestamosController : Controller
         return View(model);
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Devolver(DevolucionPrestamoViewModel devolucionModel)
@@ -281,17 +300,24 @@ public class PrestamosController : Controller
         await _context.SaveChangesAsync();
     }
 
-    private async Task CargarListasPrestamoAsync(PrestamoCreateViewModel? model = null)
+    private int? ObtenerLegajoEmpleadoDesdeSesion()
     {
-        var empleados = await _context.Empleados
-            .OrderBy(e => e.Apellido)
-            .ThenBy(e => e.Nombre)
-            .Select(e => new
-            {
-                e.Legajo,
-                NombreCompleto = $"{e.Apellido}, {e.Nombre} ({e.Legajo})"
-            })
-            .ToListAsync();
+        var legajoTexto = HttpContext.Session.GetString(SesionKeys.LegajoEmpleado);
+
+        return int.TryParse(legajoTexto, out var legajoEmpleado)
+            ? legajoEmpleado
+            : null;
+    }
+
+    private async Task CargarDatosPrestamoAsync(int legajoEmpleado, PrestamoCreateViewModel? model = null)
+    {
+        var empleado = await _context.Empleados
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Legajo == legajoEmpleado);
+
+        ViewBag.EmpleadoLogueado = empleado is null
+            ? "Empleado no identificado"
+            : $"{empleado.Apellido}, {empleado.Nombre} ({empleado.Legajo})";
 
         var libros = await _context.Libros
             .Where(l => l.Activo && l.StockDisponible > 0)
@@ -303,7 +329,6 @@ public class PrestamosController : Controller
             })
             .ToListAsync();
 
-        ViewBag.LegajoEmpleado = new SelectList(empleados, "Legajo", "NombreCompleto", model?.LegajoEmpleado);
         ViewBag.Libros = new MultiSelectList(libros, "IdLibro", "Descripcion", model?.LibrosIds);
     }
 }

@@ -1,10 +1,13 @@
 using Biblioteca.Datos;
+using Biblioteca.Filtros;
 using Biblioteca.Modelos;
+using Biblioteca.Seguridad;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteca.Controllers;
 
+[SesionAuthorize(RolesSistema.Administrador)]
 public class AutoresController : Controller
 {
     private readonly BibliotecaContext _context;

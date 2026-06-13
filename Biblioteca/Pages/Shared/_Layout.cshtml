@@ -1,4 +1,10 @@
 ﻿<!DOCTYPE html>
+@{
+    var cuenta = Microsoft.AspNetCore.Http.SessionExtensions.GetString(Context.Session, Biblioteca.Seguridad.SesionKeys.Cuenta);
+    var rol = Microsoft.AspNetCore.Http.SessionExtensions.GetString(Context.Session, Biblioteca.Seguridad.SesionKeys.Rol);
+    var estaAutenticado = !string.IsNullOrWhiteSpace(cuenta);
+    var esAdministrador = string.Equals(rol, Biblioteca.Seguridad.RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
+}
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -23,30 +29,55 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Inicio</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Libros" asp-action="Index">Libros</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Prestamos" asp-action="Index">Prestamos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="MovimientosStock" asp-action="Index">Stock</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Autores" asp-action="Index">Autores</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Categorias" asp-action="Index">Categorias</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Editoriales" asp-action="Index">Editoriales</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Empleados" asp-action="Index">Empleados</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
-                        </li>
+                        @if (estaAutenticado)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Libros" asp-action="Index">Libros</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Prestamos" asp-action="Index">Prestamos</a>
+                            </li>
+                            @if (esAdministrador)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="MovimientosStock" asp-action="Index">Stock</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Autores" asp-action="Index">Autores</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Categorias" asp-action="Index">Categorias</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Editoriales" asp-action="Index">Editoriales</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Empleados" asp-action="Index">Empleados</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (estaAutenticado)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-dark">@cuenta (@rol)</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Cuentas" asp-action="Logout" method="post">
+                                    <button type="submit" class="btn btn-link nav-link text-dark">Salir</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Cuentas" asp-action="Login">Ingresar</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

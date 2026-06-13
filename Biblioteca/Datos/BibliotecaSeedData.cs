@@ -46,28 +46,58 @@ public static class BibliotecaSeedData
             telefono: "1145678901",
             direccion: "Administracion");
 
+        var operadorSistema = await ObtenerOCrearEmpleadoAsync(
+            context,
+            dni: "30456789",
+            nombre: "Operador",
+            apellido: "Sistema",
+            telefono: "1156789012",
+            direccion: "Sucursal Central");
+
+        var administradorSistema = await ObtenerOCrearEmpleadoAsync(
+            context,
+            dni: "30567890",
+            nombre: "Administrador",
+            apellido: "Sistema",
+            telefono: "1167890123",
+            direccion: "Administracion");
+
         await context.SaveChangesAsync();
 
-        await ObtenerOCrearUsuarioAsync(
+        await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            email: "empleado1@biblioteca.local",
-            password: "Empleado1#2026",
+            cuenta: "Operador1",
+            password: "Operador1",
             rol: "Operador",
             legajoEmpleado: empleado1.Legajo);
 
-        await ObtenerOCrearUsuarioAsync(
+        await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            email: "empleado2@biblioteca.local",
-            password: "Empleado2#2026",
+            cuenta: "Operador2",
+            password: "Operador2",
             rol: "Operador",
             legajoEmpleado: empleado2.Legajo);
 
-        await ObtenerOCrearUsuarioAsync(
+        await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            email: "gerente@biblioteca.local",
-            password: "Gerente#2026",
+            cuenta: "Operador3",
+            password: "Operador3",
+            rol: "Operador",
+            legajoEmpleado: operadorSistema.Legajo);
+
+        await ObtenerOCrearUsuarioPorEmpleadoAsync(
+            context,
+            cuenta: "Administrador1",
+            password: "Administrador1",
             rol: "Administrador",
             legajoEmpleado: gerente.Legajo);
+
+        await ObtenerOCrearUsuarioPorEmpleadoAsync(
+            context,
+            cuenta: "Administrador2",
+            password: "Administrador2",
+            rol: "Administrador",
+            legajoEmpleado: administradorSistema.Legajo);
 
         await context.SaveChangesAsync();
 
@@ -75,7 +105,9 @@ public static class BibliotecaSeedData
         {
             ["Empleado 1"] = empleado1,
             ["Empleado 2"] = empleado2,
-            ["Gerente"] = gerente
+            ["Gerente"] = gerente,
+            ["Operador"] = operadorSistema,
+            ["Administrador"] = administradorSistema
         };
     }
 
@@ -343,23 +375,28 @@ public static class BibliotecaSeedData
         return empleado;
     }
 
-    private static async Task<Usuario> ObtenerOCrearUsuarioAsync(
+    private static async Task<Usuario> ObtenerOCrearUsuarioPorEmpleadoAsync(
         BibliotecaContext context,
-        string email,
+        string cuenta,
         string password,
         string rol,
         int legajoEmpleado)
     {
-        var usuario = await context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+        var usuario = await context.Usuarios.FirstOrDefaultAsync(u => u.LegajoEmpleado == legajoEmpleado);
 
         if (usuario is not null)
         {
+            usuario.Email = cuenta;
+            usuario.Password = password;
+            usuario.Rol = rol;
+            usuario.Activo = true;
+
             return usuario;
         }
 
         usuario = new Usuario
         {
-            Email = email,
+            Email = cuenta,
             Password = password,
             Rol = rol,
             LegajoEmpleado = legajoEmpleado,

@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Libros";
+    var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Libros</h1>
@@ -12,7 +13,10 @@
     </div>
     <div class="col-md-4">
         <button type="submit" class="btn btn-outline-primary">Buscar</button>
-        <a asp-action="Create" class="btn btn-primary">Crear libro</a>
+        @if (esAdministrador)
+        {
+            <a asp-action="Create" class="btn btn-primary">Crear libro</a>
+        }
     </div>
 </form>
 
@@ -41,9 +45,17 @@
             <td>@item.StockDisponible / @item.StockTotal</td>
             <td>@(item.Activo ? "Si" : "No")</td>
             <td class="text-end">
-                <a asp-action="Edit" asp-route-id="@item.IdLibro">Editar</a> |
-                <a asp-action="Details" asp-route-id="@item.IdLibro">Detalle</a> |
-                <a asp-action="Delete" asp-route-id="@item.IdLibro">Baja</a>
+                @if (esAdministrador)
+                {
+                    <a asp-action="Edit" asp-route-id="@item.IdLibro">Editar</a>
+                    <span>|</span>
+                }
+                <a asp-action="Details" asp-route-id="@item.IdLibro">Detalle</a>
+                @if (esAdministrador)
+                {
+                    <span>|</span>
+                    <a asp-action="Delete" asp-route-id="@item.IdLibro">Baja</a>
+                }
             </td>
         </tr>
 }

@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Detalle de prestamo";
+    var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Detalle de prestamo</h1>
@@ -41,7 +42,7 @@
             <td>@item.FechaDevolucion?.ToString("dd/MM/yyyy")</td>
             <td>@item.DiasRetraso</td>
             <td class="text-end">
-                @if (item.FechaDevolucion is null)
+                @if (esAdministrador && item.FechaDevolucion is null)
                 {
                     <a asp-action="Devolver" asp-route-id="@item.IdItemPrestamo">Registrar devolucion</a>
                 }
