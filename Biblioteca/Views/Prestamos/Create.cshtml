@@ -19,12 +19,12 @@
     </div>
     <div class="mb-3">
         <label asp-for="FechaPrestamo" class="form-label"></label>
-        <input asp-for="FechaPrestamo" class="form-control" />
+        <input asp-for="FechaPrestamo" type="datetime-local" class="form-control" />
         <span asp-validation-for="FechaPrestamo" class="text-danger"></span>
     </div>
     <div class="mb-3">
         <label asp-for="FechaEstimadaDevolucion" class="form-label"></label>
-        <input asp-for="FechaEstimadaDevolucion" class="form-control" />
+        <input asp-for="FechaEstimadaDevolucion" type="datetime-local" class="form-control" />
         <span asp-validation-for="FechaEstimadaDevolucion" class="text-danger"></span>
     </div>
     <button type="submit" class="btn btn-primary">Guardar prestamo</button>

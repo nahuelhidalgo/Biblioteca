@@ -37,7 +37,7 @@
         @if (Model.EstaVencido)
         {
             <div class="alert alert-warning">
-                Este prestamo esta vencido hace @Model.DiasVencido dia(s). La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy").
+                Este prestamo esta vencido hace @Model.DiasVencido dia(s). La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").
             </div>
         }
 
@@ -56,9 +56,9 @@
             <dt class="col-sm-3">Libros pendientes</dt>
             <dd class="col-sm-9">@Model.Libros</dd>
             <dt class="col-sm-3">Fecha de creación</dt>
-            <dd class="col-sm-9">@Model.FechaPrestamo.ToString("dd/MM/yyyy")</dd>
+            <dd class="col-sm-9">@Model.FechaPrestamo.ToString("dd/MM/yyyy HH:mm")</dd>
             <dt class="col-sm-3">Fecha de devolución</dt>
-            <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
+            <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm")</dd>
         </dl>
 
         @if (!Model.YaDevuelto)

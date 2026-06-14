@@ -21,7 +21,7 @@ public class PrestamosController : Controller
 
     public async Task<IActionResult> Index(string? vista, string? orden)
     {
-        var hoy = DateTime.Today;
+        var ahora = DateTime.Now;
         var mostrarVencidos = string.Equals(vista, "vencidos", StringComparison.OrdinalIgnoreCase);
         var ordenarPorFecha = string.Equals(orden, "fecha", StringComparison.OrdinalIgnoreCase);
 
@@ -33,7 +33,7 @@ public class PrestamosController : Controller
         if (mostrarVencidos)
         {
             prestamosQuery = prestamosQuery.Where(p =>
-                p.FechaDevolucion == null && p.FechaEstimadaDevolucion.Date < hoy);
+                p.FechaDevolucion == null && p.FechaEstimadaDevolucion < ahora);
         }
 
         prestamosQuery = ordenarPorFecha
@@ -198,7 +198,7 @@ public class PrestamosController : Controller
                 return RedirectToAction("Login", "Cuentas");
             }
 
-            await RegistrarDevolucionAsync(devolucionModel.IdPrestamo, devolucionModel.FechaDevolucion, legajoEmpleado.Value);
+            await RegistrarDevolucionAsync(devolucionModel.IdPrestamo, DateTime.Now, legajoEmpleado.Value);
             return RedirectToAction(nameof(Index));
         }
         catch (InvalidOperationException ex)
@@ -222,7 +222,7 @@ public class PrestamosController : Controller
             throw new InvalidOperationException("El prestamo debe incluir al menos un libro.");
         }
 
-        if (fechaEstimadaDevolucion.Date < fechaPrestamo.Date)
+        if (fechaEstimadaDevolucion < fechaPrestamo)
         {
             throw new InvalidOperationException("La fecha de devolucion no puede ser anterior a la fecha de prestamo.");
         }
@@ -323,7 +323,7 @@ public class PrestamosController : Controller
             throw new InvalidOperationException("El prestamo ya fue devuelto.");
         }
 
-        if (fechaDevolucion.Date < prestamo.Fecha.Date)
+        if (fechaDevolucion < prestamo.Fecha)
         {
             throw new InvalidOperationException("La fecha de devolucion no puede ser anterior a la fecha de prestamo.");
         }
@@ -413,8 +413,9 @@ public class PrestamosController : Controller
             .Where(i => i.FechaDevolucion is null)
             .OrderBy(i => i.Libro.Titulo)
             .ToList();
+        var ahora = DateTime.Now;
         var estaVencido = itemsPendientes.Count > 0
-            && prestamo.FechaEstimadaDevolucion.Date < DateTime.Today;
+            && prestamo.FechaEstimadaDevolucion < ahora;
 
         return new DevolucionPrestamoViewModel
         {
@@ -426,9 +427,9 @@ public class PrestamosController : Controller
                 : string.Join(", ", itemsPendientes.Select(i => i.Libro.Titulo)),
             FechaPrestamo = prestamo.Fecha,
             FechaEstimadaDevolucion = prestamo.FechaEstimadaDevolucion,
-            FechaDevolucion = fechaDevolucion ?? DateTime.Today,
+            FechaDevolucion = fechaDevolucion ?? ahora,
             EstaVencido = estaVencido,
-            DiasVencido = estaVencido ? (DateTime.Today - prestamo.FechaEstimadaDevolucion.Date).Days : 0,
+            DiasVencido = estaVencido ? (ahora.Date - prestamo.FechaEstimadaDevolucion.Date).Days : 0,
             YaDevuelto = itemsPendientes.Count == 0
         };
     }

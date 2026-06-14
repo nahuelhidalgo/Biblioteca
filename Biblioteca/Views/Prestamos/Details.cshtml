@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Detalle de prestamo";
     var tienePendientes = Model.ItemsPrestamo.Any(i => i.FechaDevolucion is null);
-    var estaVencido = tienePendientes && Model.FechaEstimadaDevolucion.Date < DateTime.Today;
+    var estaVencido = tienePendientes && Model.FechaEstimadaDevolucion < DateTime.Now;
     var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
@@ -15,11 +15,11 @@
     <dt class="col-sm-3">Empleado</dt>
     <dd class="col-sm-9">@Model.Empleado.NombreCompleto</dd>
     <dt class="col-sm-3">Fecha de creación</dt>
-    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
+    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Fecha de devolución</dt>
-    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
+    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Devolución registrada</dt>
-    <dd class="col-sm-9">@(Model.FechaDevolucion?.ToString("dd/MM/yyyy") ?? "-")</dd>
+    <dd class="col-sm-9">@(Model.FechaDevolucion?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
     <dt class="col-sm-3">Estado</dt>
     <dd class="col-sm-9">@Model.Estado</dd>
 </dl>
@@ -27,7 +27,7 @@
 @if (estaVencido)
 {
     <div class="alert alert-warning">
-        Este prestamo esta vencido. La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy").
+        Este prestamo esta vencido. La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").
     </div>
 }
 
@@ -54,7 +54,7 @@
         <tr>
             <td>@item.Libro.Titulo</td>
             <td>@item.EstadoItem</td>
-            <td>@item.FechaDevolucion?.ToString("dd/MM/yyyy")</td>
+            <td>@item.FechaDevolucion?.ToString("dd/MM/yyyy HH:mm")</td>
             <td>@item.DiasRetraso</td>
         </tr>
 }

@@ -6,7 +6,7 @@ public class Prestamo
 {
     public int IdPrestamo { get; set; }
 
-    public DateTime Fecha { get; set; } = DateTime.Today;
+    public DateTime Fecha { get; set; } = DateTime.Now;
 
     public DateTime FechaEstimadaDevolucion { get; set; }
 

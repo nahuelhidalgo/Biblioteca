@@ -5,6 +5,8 @@ using Biblioteca.Seguridad;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Text;
 
 namespace Biblioteca.Controllers;
 
@@ -54,10 +56,17 @@ public class UsuariosController : Controller
     public async Task<IActionResult> Create([Bind("IdUsuarioSistema,Email,Password,Rol,Activo,UltimoAcceso,LegajoEmpleado")] Usuario usuario)
     {
         usuario.Email = usuario.Email.Trim().ToLowerInvariant();
+        var empleado = await _context.Empleados
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Legajo == usuario.LegajoEmpleado);
 
-        if (!await _context.Empleados.AnyAsync(e => e.Legajo == usuario.LegajoEmpleado))
+        if (empleado is null)
         {
             ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "Seleccione un empleado valido.");
+        }
+        else
+        {
+            ValidarCuentaEmpleado(usuario, empleado);
         }
 
         if (await _context.Usuarios.AnyAsync(u => u.LegajoEmpleado == usuario.LegajoEmpleado))
@@ -104,10 +113,17 @@ public class UsuariosController : Controller
         }
 
         usuario.Email = usuario.Email.Trim().ToLowerInvariant();
+        var empleado = await _context.Empleados
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Legajo == usuario.LegajoEmpleado);
 
-        if (!await _context.Empleados.AnyAsync(e => e.Legajo == usuario.LegajoEmpleado))
+        if (empleado is null)
         {
             ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "Seleccione un empleado valido.");
+        }
+        else
+        {
+            ValidarCuentaEmpleado(usuario, empleado);
         }
 
         if (await _context.Usuarios.AnyAsync(u =>
@@ -172,5 +188,59 @@ public class UsuariosController : Controller
             .ToListAsync();
 
         ViewBag.LegajoEmpleado = new SelectList(empleados, "Legajo", "NombreCompleto", seleccionado);
+    }
+
+    private void ValidarCuentaEmpleado(Usuario usuario, Empleado empleado)
+    {
+        var cuentaEsperada = CrearCuentaEsperada(empleado);
+
+        if (!string.Equals(usuario.Email, cuentaEsperada, StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(
+                nameof(Usuario.Email),
+                $"La cuenta debe ser {cuentaEsperada} para el empleado seleccionado.");
+        }
+    }
+
+    private static string CrearCuentaEsperada(Empleado empleado)
+    {
+        var partesNombre = NormalizarParteCuenta(empleado.Nombre)
+            .Split('.', StringSplitOptions.RemoveEmptyEntries);
+        var apellido = NormalizarParteCuenta(empleado.Apellido);
+        var usuario = string.Join(".", partesNombre.Append(apellido));
+
+        return $"{usuario}@ort.edu.ar";
+    }
+
+    private static string NormalizarParteCuenta(string texto)
+    {
+        var normalizado = texto.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder();
+        var agregarPunto = false;
+
+        foreach (var caracter in normalizado)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(caracter) == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsLetterOrDigit(caracter))
+            {
+                if (agregarPunto && builder.Length > 0)
+                {
+                    builder.Append('.');
+                }
+
+                builder.Append(caracter);
+                agregarPunto = false;
+            }
+            else if (char.IsWhiteSpace(caracter) || caracter == '.' || caracter == '-' || caracter == '_')
+            {
+                agregarPunto = builder.Length > 0;
+            }
+        }
+
+        return builder.ToString();
     }
 }

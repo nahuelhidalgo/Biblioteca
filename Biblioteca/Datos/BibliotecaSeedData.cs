@@ -66,35 +66,35 @@ public static class BibliotecaSeedData
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "operador1@ort.edu.ar",
+            cuenta: "juan.perez@ort.edu.ar",
             password: "Operador1",
             rol: "Operador",
             legajoEmpleado: empleado1.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "operador2@ort.edu.ar",
+            cuenta: "ana.maria.perez@ort.edu.ar",
             password: "Operador2",
             rol: "Operador",
             legajoEmpleado: empleado2.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "operador3@ort.edu.ar",
+            cuenta: "lucia.fernandez@ort.edu.ar",
             password: "Operador3",
             rol: "Operador",
             legajoEmpleado: operadorSistema.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "administrador1@ort.edu.ar",
+            cuenta: "carlos.gomez@ort.edu.ar",
             password: "Administrador1",
             rol: "Administrador",
             legajoEmpleado: gerente.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "administrador2@ort.edu.ar",
+            cuenta: "martin.silva@ort.edu.ar",
             password: "Administrador2",
             rol: "Administrador",
             legajoEmpleado: administradorSistema.Legajo);
@@ -210,11 +210,11 @@ public static class BibliotecaSeedData
                 libro.StockTotal += cantidad;
                 libro.StockDisponible += cantidad;
 
-            context.MovimientosStock.Add(new MovimientoStock
-            {
-                IdLibro = libro.IdLibro,
-                TipoMovimiento = TipoMovimientoStock.AltaStock,
-                Cantidad = cantidad,
+                context.MovimientosStock.Add(new MovimientoStock
+                {
+                    IdLibro = libro.IdLibro,
+                    TipoMovimiento = TipoMovimientoStock.AltaStock,
+                    Cantidad = cantidad,
                     Motivo = "Carga inicial de datos",
                     Fecha = DateTime.Now
                 });
@@ -231,33 +231,106 @@ public static class BibliotecaSeedData
     {
         if (await context.Prestamos.AnyAsync())
         {
+            await ActualizarHorasPrestamosDeSemillaAsync(context, empleados, libros);
             return;
         }
+
+        var hoy = DateTime.Today;
 
         await RegistrarPrestamoDeSemillaAsync(
             context,
             empleados["Empleado 1"].Legajo,
             new[] { libros["Cien anios de soledad"].IdLibro, libros["Rayuela"].IdLibro },
-            DateTime.Today.AddDays(-3),
-            DateTime.Today.AddDays(12));
+            hoy.AddDays(-3).AddHours(9).AddMinutes(30),
+            hoy.AddDays(12).AddHours(18));
 
         await RegistrarPrestamoDeSemillaAsync(
             context,
             empleados["Empleado 2"].Legajo,
             new[] { libros["La casa de los espiritus"].IdLibro },
-            DateTime.Today.AddDays(-15),
-            DateTime.Today.AddDays(-5));
+            hoy.AddDays(-15).AddHours(14).AddMinutes(15),
+            hoy.AddDays(-5).AddHours(17).AddMinutes(30));
 
         var prestamoDevuelto = await RegistrarPrestamoDeSemillaAsync(
             context,
             empleados["Gerente"].Legajo,
             new[] { libros["El tunel"].IdLibro },
-            DateTime.Today.AddDays(-20),
-            DateTime.Today.AddDays(-10));
+            hoy.AddDays(-20).AddHours(11),
+            hoy.AddDays(-10).AddHours(16));
 
         var itemDevuelto = prestamoDevuelto.ItemsPrestamo.First();
 
-        await RegistrarDevolucionDeSemillaAsync(context, itemDevuelto.IdItemPrestamo, DateTime.Today.AddDays(-8));
+        await RegistrarDevolucionDeSemillaAsync(context, itemDevuelto.IdItemPrestamo, hoy.AddDays(-8).AddHours(10).AddMinutes(45));
+    }
+
+    private static async Task ActualizarHorasPrestamosDeSemillaAsync(
+        BibliotecaContext context,
+        Dictionary<string, Empleado> empleados,
+        Dictionary<string, Libro> libros)
+    {
+        var hoy = DateTime.Today;
+
+        await ActualizarHoraPrestamoDeSemillaAsync(
+            context,
+            empleados["Empleado 1"].Legajo,
+            new[] { libros["Cien anios de soledad"].IdLibro, libros["Rayuela"].IdLibro },
+            hoy.AddDays(-3).AddHours(9).AddMinutes(30),
+            hoy.AddDays(12).AddHours(18));
+
+        await ActualizarHoraPrestamoDeSemillaAsync(
+            context,
+            empleados["Empleado 2"].Legajo,
+            new[] { libros["La casa de los espiritus"].IdLibro },
+            hoy.AddDays(-15).AddHours(14).AddMinutes(15),
+            hoy.AddDays(-5).AddHours(17).AddMinutes(30));
+
+        await ActualizarHoraPrestamoDeSemillaAsync(
+            context,
+            empleados["Gerente"].Legajo,
+            new[] { libros["El tunel"].IdLibro },
+            hoy.AddDays(-20).AddHours(11),
+            hoy.AddDays(-10).AddHours(16),
+            hoy.AddDays(-8).AddHours(10).AddMinutes(45));
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task ActualizarHoraPrestamoDeSemillaAsync(
+        BibliotecaContext context,
+        int legajoEmpleado,
+        IEnumerable<int> librosIds,
+        DateTime fechaPrestamo,
+        DateTime fechaDevolucion,
+        DateTime? fechaDevolucionRegistrada = null)
+    {
+        var ids = librosIds.OrderBy(id => id).ToList();
+        var prestamos = await context.Prestamos
+            .Include(p => p.ItemsPrestamo)
+            .Where(p => p.LegajoEmpleado == legajoEmpleado)
+            .ToListAsync();
+        var prestamo = prestamos.FirstOrDefault(p =>
+            p.ItemsPrestamo.Count == ids.Count
+            && p.ItemsPrestamo.Select(i => i.IdLibro).OrderBy(id => id).SequenceEqual(ids));
+
+        if (prestamo is null
+            || prestamo.Fecha.TimeOfDay != TimeSpan.Zero
+            || prestamo.FechaEstimadaDevolucion.TimeOfDay != TimeSpan.Zero)
+        {
+            return;
+        }
+
+        prestamo.Fecha = fechaPrestamo;
+        prestamo.FechaEstimadaDevolucion = fechaDevolucion;
+
+        if (fechaDevolucionRegistrada is not null && prestamo.FechaDevolucion?.TimeOfDay == TimeSpan.Zero)
+        {
+            prestamo.FechaDevolucion = fechaDevolucionRegistrada.Value;
+
+            foreach (var item in prestamo.ItemsPrestamo.Where(i => i.FechaDevolucion?.TimeOfDay == TimeSpan.Zero))
+            {
+                item.FechaDevolucion = fechaDevolucionRegistrada.Value;
+            }
+        }
     }
 
     private static async Task<Prestamo> RegistrarPrestamoDeSemillaAsync(
@@ -307,7 +380,7 @@ public static class BibliotecaSeedData
                 TipoMovimiento = TipoMovimientoStock.Prestado,
                 Cantidad = cantidad,
                 Motivo = "Prestamo registrado",
-                Fecha = DateTime.Now
+                Fecha = fechaPrestamo
             });
         }
 
@@ -342,7 +415,7 @@ public static class BibliotecaSeedData
             TipoMovimiento = TipoMovimientoStock.AltaStock,
             Cantidad = 1,
             Motivo = "Devolucion de prestamo",
-            Fecha = DateTime.Now
+            Fecha = fechaDevolucion
         });
 
         await context.SaveChangesAsync();

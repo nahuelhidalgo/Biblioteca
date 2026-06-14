@@ -17,9 +17,9 @@
     <dt class="col-sm-3">Empleado</dt>
     <dd class="col-sm-9">@Model.Empleado.NombreCompleto</dd>
     <dt class="col-sm-3">Fecha de creación</dt>
-    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
+    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Fecha de devolución</dt>
-    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
+    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Libros pendientes</dt>
     <dd class="col-sm-9">@itemsPendientes.Count</dd>
 </dl>

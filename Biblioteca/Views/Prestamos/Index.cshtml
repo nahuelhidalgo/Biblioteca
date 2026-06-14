@@ -22,10 +22,9 @@
        asp-route-vista="@vista"
        asp-route-orden="fecha"
        class="btn @(ordenandoPorFecha ? "btn-secondary" : "btn-outline-secondary")">Ordenar por fecha de creación</a>
-    @if (mostrandoVencidos || ordenandoPorFecha)
-    {
-        <a asp-action="Index" class="btn btn-outline-dark">Ordenar por ID</a>
-    }
+    <a asp-action="Index"
+       asp-route-vista="@vista"
+       class="btn btn-outline-dark">Ordenar por ID</a>
 </p>
 
 <table class="table table-striped">
@@ -43,12 +42,12 @@
     <tbody>
 @foreach (var item in Model)
 {
-    var estaVencido = item.FechaDevolucion is null && item.FechaEstimadaDevolucion.Date < DateTime.Today;
+    var estaVencido = item.FechaDevolucion is null && item.FechaEstimadaDevolucion < DateTime.Now;
         <tr>
             <td>@item.IdPrestamo</td>
             <td>@item.Empleado.NombreCompleto</td>
-            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-            <td>@item.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</td>
+            <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@item.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm")</td>
             <td>
                 @item.Estado
                 @if (estaVencido)
@@ -58,6 +57,8 @@
             </td>
             <td>@item.ItemsPrestamo.Count</td>
             <td class="text-end">
+                <a asp-action="Devolver" asp-route-id="@item.IdPrestamo">Registrar devolución</a>
+                <span>|</span>
                 <a asp-action="Details" asp-route-id="@item.IdPrestamo">Detalle</a>
                 @if (esAdministrador)
                 {
