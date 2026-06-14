@@ -10,7 +10,7 @@
     <dt class="col-sm-3">Legajo</dt>
     <dd class="col-sm-9">@Model.Legajo</dd>
     <dt class="col-sm-3">Nombre</dt>
-    <dd class="col-sm-9">@Model.Apellido, @Model.Nombre</dd>
+    <dd class="col-sm-9">@Model.NombreCompleto</dd>
     <dt class="col-sm-3">DNI</dt>
     <dd class="col-sm-9">@Model.DNI</dd>
     <dt class="col-sm-3">Telefono</dt>
@@ -21,6 +21,8 @@
     <dd class="col-sm-9">@Model.Usuario?.Email</dd>
     <dt class="col-sm-3">Prestamos registrados</dt>
     <dd class="col-sm-9">@Model.Prestamos.Count</dd>
+    <dt class="col-sm-3">Movimientos registrados</dt>
+    <dd class="col-sm-9">@Model.MovimientosStock.Count</dd>
 </dl>
 
 <a asp-action="Edit" asp-route-id="@Model.Legajo" class="btn btn-primary">Editar</a>

@@ -45,7 +45,7 @@ public class UsuariosController : Controller
 
     public async Task<IActionResult> Create()
     {
-        await CargarEmpleadosAsync();
+        await CargarEmpleadosDisponiblesAsync();
         return View();
     }
 
@@ -53,9 +53,21 @@ public class UsuariosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("IdUsuarioSistema,Email,Password,Rol,Activo,UltimoAcceso,LegajoEmpleado")] Usuario usuario)
     {
+        usuario.Email = usuario.Email.Trim().ToLowerInvariant();
+
+        if (!await _context.Empleados.AnyAsync(e => e.Legajo == usuario.LegajoEmpleado))
+        {
+            ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "Seleccione un empleado valido.");
+        }
+
+        if (await _context.Usuarios.AnyAsync(u => u.LegajoEmpleado == usuario.LegajoEmpleado))
+        {
+            ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "El empleado seleccionado ya tiene un usuario asociado.");
+        }
+
         if (!ModelState.IsValid)
         {
-            await CargarEmpleadosAsync(usuario.LegajoEmpleado);
+            await CargarEmpleadosDisponiblesAsync(usuario.LegajoEmpleado);
             return View(usuario);
         }
 
@@ -78,7 +90,7 @@ public class UsuariosController : Controller
             return NotFound();
         }
 
-        await CargarEmpleadosAsync(usuario.LegajoEmpleado);
+        await CargarEmpleadosDisponiblesAsync(usuario.LegajoEmpleado, usuario.IdUsuarioSistema);
         return View(usuario);
     }
 
@@ -91,9 +103,22 @@ public class UsuariosController : Controller
             return NotFound();
         }
 
+        usuario.Email = usuario.Email.Trim().ToLowerInvariant();
+
+        if (!await _context.Empleados.AnyAsync(e => e.Legajo == usuario.LegajoEmpleado))
+        {
+            ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "Seleccione un empleado valido.");
+        }
+
+        if (await _context.Usuarios.AnyAsync(u =>
+            u.IdUsuarioSistema != usuario.IdUsuarioSistema && u.LegajoEmpleado == usuario.LegajoEmpleado))
+        {
+            ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "El empleado seleccionado ya tiene un usuario asociado.");
+        }
+
         if (!ModelState.IsValid)
         {
-            await CargarEmpleadosAsync(usuario.LegajoEmpleado);
+            await CargarEmpleadosDisponiblesAsync(usuario.LegajoEmpleado, usuario.IdUsuarioSistema);
             return View(usuario);
         }
 
@@ -132,15 +157,17 @@ public class UsuariosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task CargarEmpleadosAsync(int? seleccionado = null)
+    private async Task CargarEmpleadosDisponiblesAsync(int? seleccionado = null, int? usuarioActualId = null)
     {
         var empleados = await _context.Empleados
-            .OrderBy(e => e.Apellido)
-            .ThenBy(e => e.Nombre)
+            .Where(e => e.Usuario == null
+                || (usuarioActualId != null && e.Usuario.IdUsuarioSistema == usuarioActualId))
+            .OrderBy(e => e.Nombre)
+            .ThenBy(e => e.Apellido)
             .Select(e => new
             {
                 e.Legajo,
-                NombreCompleto = $"{e.Apellido}, {e.Nombre} ({e.Legajo})"
+                NombreCompleto = $"{e.Nombre} {e.Apellido} ({e.Legajo})"
             })
             .ToListAsync();
 

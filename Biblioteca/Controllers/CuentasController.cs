@@ -34,14 +34,14 @@ public class CuentasController : Controller
             return View(model);
         }
 
-        var cuenta = model.Cuenta.Trim();
+        var cuenta = model.Cuenta.Trim().ToLowerInvariant();
         var usuario = await _context.Usuarios
             .Include(u => u.Empleado)
             .FirstOrDefaultAsync(u => u.Email == cuenta && u.Activo);
 
         if (usuario is null || usuario.Password != model.Password)
         {
-            ModelState.AddModelError(string.Empty, "La cuenta o la contrasenia no son correctas.");
+            ModelState.AddModelError(string.Empty, "La cuenta o la contraseña no son correctas.");
             return View(model);
         }
 
@@ -50,6 +50,7 @@ public class CuentasController : Controller
 
         HttpContext.Session.SetString(SesionKeys.UsuarioId, usuario.IdUsuarioSistema.ToString());
         HttpContext.Session.SetString(SesionKeys.Cuenta, usuario.Email);
+        HttpContext.Session.SetString(SesionKeys.NombreEmpleado, usuario.Empleado.NombreCompleto);
         HttpContext.Session.SetString(SesionKeys.Rol, usuario.Rol);
         HttpContext.Session.SetString(SesionKeys.LegajoEmpleado, usuario.LegajoEmpleado.ToString());
 
@@ -76,6 +77,6 @@ public class CuentasController : Controller
             return Redirect(returnUrl);
         }
 
-        return RedirectToAction("Index", "Libros");
+        return RedirectToPage("/Index");
     }
 }

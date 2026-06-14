@@ -10,6 +10,10 @@ public class MovimientoStock
 
     public Libro Libro { get; set; } = null!;
 
+    public int? LegajoEmpleado { get; set; }
+
+    public Empleado? Empleado { get; set; }
+
     [Required]
     [EnumDataType(typeof(TipoMovimientoStock))]
     public TipoMovimientoStock? TipoMovimiento { get; set; }

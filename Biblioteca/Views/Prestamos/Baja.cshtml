@@ -1,0 +1,52 @@
+@model Prestamo
+
+@{
+    ViewData["Title"] = "Dar de baja prestamo";
+    var itemsPendientes = Model.ItemsPrestamo.Where(i => i.FechaDevolucion is null).ToList();
+}
+
+<h1>Dar de baja prestamo</h1>
+
+<div class="alert alert-warning">
+    Esta accion eliminara el prestamo y restituira el stock pendiente asociado.
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Nro.</dt>
+    <dd class="col-sm-9">@Model.IdPrestamo</dd>
+    <dt class="col-sm-3">Empleado</dt>
+    <dd class="col-sm-9">@Model.Empleado.NombreCompleto</dd>
+    <dt class="col-sm-3">Fecha de creación</dt>
+    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
+    <dt class="col-sm-3">Fecha de devolución</dt>
+    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
+    <dt class="col-sm-3">Libros pendientes</dt>
+    <dd class="col-sm-9">@itemsPendientes.Count</dd>
+</dl>
+
+@if (itemsPendientes.Count > 0)
+{
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>ISBN</th>
+                <th>Libro</th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach (var item in itemsPendientes)
+{
+            <tr>
+                <td>@item.Libro.ISBN</td>
+                <td>@item.Libro.Titulo</td>
+            </tr>
+}
+        </tbody>
+    </table>
+}
+
+<form asp-action="Baja" method="post">
+    <input type="hidden" name="id" value="@Model.IdPrestamo" />
+    <button type="submit" class="btn btn-danger">Confirmar baja</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>

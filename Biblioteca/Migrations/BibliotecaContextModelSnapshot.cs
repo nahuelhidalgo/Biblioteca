@@ -271,6 +271,9 @@ namespace Biblioteca.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<int?>("LegajoEmpleado")
+                        .HasColumnType("int");
+
                     b.Property<string>("TipoMovimiento")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -279,6 +282,8 @@ namespace Biblioteca.Migrations
                     b.HasKey("IdMovimientoStock");
 
                     b.HasIndex("IdLibro");
+
+                    b.HasIndex("LegajoEmpleado");
 
                     b.ToTable("MovimientosStock", t =>
                         {
@@ -409,11 +414,18 @@ namespace Biblioteca.Migrations
 
             modelBuilder.Entity("Biblioteca.Modelos.MovimientoStock", b =>
                 {
+                    b.HasOne("Biblioteca.Modelos.Empleado", "Empleado")
+                        .WithMany("MovimientosStock")
+                        .HasForeignKey("LegajoEmpleado")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Biblioteca.Modelos.Libro", "Libro")
                         .WithMany("MovimientosStock")
                         .HasForeignKey("IdLibro")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Empleado");
 
                     b.Navigation("Libro");
                 });
@@ -457,6 +469,8 @@ namespace Biblioteca.Migrations
 
             modelBuilder.Entity("Biblioteca.Modelos.Empleado", b =>
                 {
+                    b.Navigation("MovimientosStock");
+
                     b.Navigation("Prestamos");
 
                     b.Navigation("Usuario");

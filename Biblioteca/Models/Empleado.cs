@@ -28,7 +28,11 @@ public class Empleado
     [StringLength(200)]
     public string Direccion { get; set; } = string.Empty;
 
+    public string NombreCompleto => $"{Nombre} {Apellido}";
+
     public Usuario? Usuario { get; set; }
 
     public ICollection<Prestamo> Prestamos { get; set; } = new List<Prestamo>();
+
+    public ICollection<MovimientoStock> MovimientosStock { get; set; } = new List<MovimientoStock>();
 }

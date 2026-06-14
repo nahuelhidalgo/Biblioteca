@@ -2,12 +2,30 @@
 
 @{
     ViewData["Title"] = "Prestamos";
+    var vista = ViewBag.Vista as string;
+    var orden = ViewBag.Orden as string;
+    var mostrandoVencidos = string.Equals(vista, "vencidos", StringComparison.OrdinalIgnoreCase);
+    var ordenandoPorFecha = string.Equals(orden, "fecha", StringComparison.OrdinalIgnoreCase);
+    var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Prestamos</h1>
 
-<p>
+<p class="d-flex flex-wrap gap-2">
     <a asp-action="Create" class="btn btn-primary">Nuevo prestamo</a>
+    <a asp-action="Devolver" class="btn btn-outline-primary">Registrar devolucion</a>
+    <a asp-action="Index"
+       asp-route-vista="vencidos"
+       asp-route-orden="@orden"
+       class="btn @(mostrandoVencidos ? "btn-warning" : "btn-outline-warning")">Prestamos vencidos</a>
+    <a asp-action="Index"
+       asp-route-vista="@vista"
+       asp-route-orden="fecha"
+       class="btn @(ordenandoPorFecha ? "btn-secondary" : "btn-outline-secondary")">Ordenar por fecha de creación</a>
+    @if (mostrandoVencidos || ordenandoPorFecha)
+    {
+        <a asp-action="Index" class="btn btn-outline-dark">Ordenar por ID</a>
+    }
 </p>
 
 <table class="table table-striped">
@@ -15,8 +33,8 @@
         <tr>
             <th>Nro.</th>
             <th>Empleado</th>
-            <th>Fecha</th>
-            <th>Estimado</th>
+            <th>Fecha de creación</th>
+            <th>Fecha de devolución</th>
             <th>Estado</th>
             <th>Libros</th>
             <th></th>
@@ -25,15 +43,27 @@
     <tbody>
 @foreach (var item in Model)
 {
+    var estaVencido = item.FechaDevolucion is null && item.FechaEstimadaDevolucion.Date < DateTime.Today;
         <tr>
             <td>@item.IdPrestamo</td>
-            <td>@item.Empleado.Apellido, @item.Empleado.Nombre</td>
+            <td>@item.Empleado.NombreCompleto</td>
             <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
             <td>@item.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</td>
-            <td>@item.Estado</td>
+            <td>
+                @item.Estado
+                @if (estaVencido)
+                {
+                    <span class="badge bg-warning text-dark ms-1">Vencido</span>
+                }
+            </td>
             <td>@item.ItemsPrestamo.Count</td>
             <td class="text-end">
                 <a asp-action="Details" asp-route-id="@item.IdPrestamo">Detalle</a>
+                @if (esAdministrador)
+                {
+                    <span>|</span>
+                    <a asp-action="Baja" asp-route-id="@item.IdPrestamo">Dar de baja</a>
+                }
             </td>
         </tr>
 }

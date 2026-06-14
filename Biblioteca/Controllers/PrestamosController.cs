@@ -19,15 +19,33 @@ public class PrestamosController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? vista, string? orden)
     {
-        var prestamos = await _context.Prestamos
+        var hoy = DateTime.Today;
+        var mostrarVencidos = string.Equals(vista, "vencidos", StringComparison.OrdinalIgnoreCase);
+        var ordenarPorFecha = string.Equals(orden, "fecha", StringComparison.OrdinalIgnoreCase);
+
+        IQueryable<Prestamo> prestamosQuery = _context.Prestamos
             .Include(p => p.Empleado)
             .Include(p => p.ItemsPrestamo)
-            .ThenInclude(i => i.Libro)
-            .OrderByDescending(p => p.Fecha)
+            .ThenInclude(i => i.Libro);
+
+        if (mostrarVencidos)
+        {
+            prestamosQuery = prestamosQuery.Where(p =>
+                p.FechaDevolucion == null && p.FechaEstimadaDevolucion.Date < hoy);
+        }
+
+        prestamosQuery = ordenarPorFecha
+            ? prestamosQuery.OrderByDescending(p => p.Fecha).ThenByDescending(p => p.IdPrestamo)
+            : prestamosQuery.OrderBy(p => p.IdPrestamo).ThenBy(p => p.Fecha);
+
+        var prestamos = await prestamosQuery
             .AsNoTracking()
             .ToListAsync();
+
+        ViewBag.Vista = vista;
+        ViewBag.Orden = orden;
 
         return View(prestamos);
     }
@@ -47,6 +65,47 @@ public class PrestamosController : Controller
             .FirstOrDefaultAsync(p => p.IdPrestamo == id);
 
         return prestamo is null ? NotFound() : View(prestamo);
+    }
+
+    [SesionAuthorize(RolesSistema.Administrador)]
+    public async Task<IActionResult> Baja(int? id)
+    {
+        if (id is null)
+        {
+            return NotFound();
+        }
+
+        var prestamo = await _context.Prestamos
+            .Include(p => p.Empleado)
+            .Include(p => p.ItemsPrestamo)
+            .ThenInclude(i => i.Libro)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdPrestamo == id);
+
+        return prestamo is null ? NotFound() : View(prestamo);
+    }
+
+    [SesionAuthorize(RolesSistema.Administrador)]
+    [HttpPost, ActionName("Baja")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BajaConfirmed(int id)
+    {
+        var legajoAdministrador = ObtenerLegajoEmpleadoDesdeSesion();
+
+        if (legajoAdministrador is null)
+        {
+            return RedirectToAction("Login", "Cuentas");
+        }
+
+        try
+        {
+            await DarDeBajaPrestamoAsync(id, legajoAdministrador.Value);
+            return RedirectToAction(nameof(Index));
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
     }
 
     public async Task<IActionResult> Create()
@@ -102,57 +161,51 @@ public class PrestamosController : Controller
         }
     }
 
-    [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Devolver(int? id)
     {
         if (id is null)
         {
-            return NotFound();
+            return View(new DevolucionPrestamoViewModel());
         }
 
-        var item = await _context.ItemsPrestamo
-            .Include(i => i.Libro)
-            .Include(i => i.Prestamo)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.IdItemPrestamo == id);
+        var model = await CrearModeloDevolucionAsync(id.Value);
 
-        if (item is null)
+        if (model is null)
         {
-            return NotFound();
+            ModelState.AddModelError(nameof(DevolucionPrestamoViewModel.IdPrestamo), "No se encontro un prestamo con ese ID.");
+            return View(new DevolucionPrestamoViewModel { IdPrestamo = id.Value });
         }
-
-        var model = new DevolucionPrestamoViewModel
-        {
-            IdItemPrestamo = item.IdItemPrestamo,
-            Prestamo = $"Prestamo #{item.IdPrestamo}",
-            Libro = item.Libro.Titulo,
-            FechaPrestamo = item.Prestamo.Fecha,
-            FechaEstimadaDevolucion = item.Prestamo.FechaEstimadaDevolucion,
-            FechaDevolucion = DateTime.Today
-        };
 
         return View(model);
     }
 
-    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Devolver(DevolucionPrestamoViewModel devolucionModel)
     {
         if (!ModelState.IsValid)
         {
-            return View(devolucionModel);
+            var model = await CrearModeloDevolucionAsync(devolucionModel.IdPrestamo, devolucionModel.FechaDevolucion);
+            return View(model ?? devolucionModel);
         }
 
         try
         {
-            await RegistrarDevolucionAsync(devolucionModel.IdItemPrestamo, devolucionModel.FechaDevolucion);
+            var legajoEmpleado = ObtenerLegajoEmpleadoDesdeSesion();
+
+            if (legajoEmpleado is null)
+            {
+                return RedirectToAction("Login", "Cuentas");
+            }
+
+            await RegistrarDevolucionAsync(devolucionModel.IdPrestamo, devolucionModel.FechaDevolucion, legajoEmpleado.Value);
             return RedirectToAction(nameof(Index));
         }
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            return View(devolucionModel);
+            var model = await CrearModeloDevolucionAsync(devolucionModel.IdPrestamo, devolucionModel.FechaDevolucion);
+            return View(model ?? devolucionModel);
         }
     }
 
@@ -171,7 +224,7 @@ public class PrestamosController : Controller
 
         if (fechaEstimadaDevolucion.Date < fechaPrestamo.Date)
         {
-            throw new InvalidOperationException("La fecha estimada de devolucion no puede ser anterior a la fecha de prestamo.");
+            throw new InvalidOperationException("La fecha de devolucion no puede ser anterior a la fecha de prestamo.");
         }
 
         var empleadoExiste = await _context.Empleados.AnyAsync(e => e.Legajo == legajoEmpleado);
@@ -236,10 +289,11 @@ public class PrestamosController : Controller
             _context.MovimientosStock.Add(new MovimientoStock
             {
                 IdLibro = libro.IdLibro,
+                LegajoEmpleado = legajoEmpleado,
                 TipoMovimiento = TipoMovimientoStock.Prestado,
                 Cantidad = cantidad,
                 Motivo = "Prestamo registrado",
-                Fecha = fechaPrestamo
+                Fecha = DateTime.Now
             });
         }
 
@@ -248,56 +302,135 @@ public class PrestamosController : Controller
         return prestamo;
     }
 
-    private async Task RegistrarDevolucionAsync(int idItemPrestamo, DateTime fechaDevolucion)
+    private async Task RegistrarDevolucionAsync(int idPrestamo, DateTime fechaDevolucion, int legajoEmpleado)
     {
-        var item = await _context.ItemsPrestamo
-            .Include(i => i.Libro)
-            .Include(i => i.Prestamo)
-            .FirstOrDefaultAsync(i => i.IdItemPrestamo == idItemPrestamo);
+        var prestamo = await _context.Prestamos
+            .Include(p => p.ItemsPrestamo)
+            .ThenInclude(i => i.Libro)
+            .FirstOrDefaultAsync(p => p.IdPrestamo == idPrestamo);
 
-        if (item is null)
+        if (prestamo is null)
         {
-            throw new InvalidOperationException("El item de prestamo indicado no existe.");
+            throw new InvalidOperationException("El prestamo indicado no existe.");
         }
 
-        if (item.FechaDevolucion is not null)
+        var itemsPendientes = prestamo.ItemsPrestamo
+            .Where(i => i.FechaDevolucion is null)
+            .ToList();
+
+        if (itemsPendientes.Count == 0)
         {
-            throw new InvalidOperationException("El item de prestamo ya fue devuelto.");
+            throw new InvalidOperationException("El prestamo ya fue devuelto.");
         }
 
-        if (fechaDevolucion.Date < item.Prestamo.Fecha.Date)
+        if (fechaDevolucion.Date < prestamo.Fecha.Date)
         {
             throw new InvalidOperationException("La fecha de devolucion no puede ser anterior a la fecha de prestamo.");
         }
 
-        var diasRetraso = Math.Max(0, (fechaDevolucion.Date - item.Prestamo.FechaEstimadaDevolucion.Date).Days);
+        var diasRetraso = Math.Max(0, (fechaDevolucion.Date - prestamo.FechaEstimadaDevolucion.Date).Days);
 
-        item.FechaDevolucion = fechaDevolucion;
-        item.DiasRetraso = diasRetraso;
-        item.EstadoItem = diasRetraso > 0 ? EstadoItemPrestamo.Vencido : EstadoItemPrestamo.Devuelto;
-        item.Libro.StockDisponible += 1;
-
-        _context.MovimientosStock.Add(new MovimientoStock
+        foreach (var item in itemsPendientes)
         {
-            IdLibro = item.IdLibro,
-            TipoMovimiento = TipoMovimientoStock.AltaStock,
-            Cantidad = 1,
-            Motivo = "Devolucion de prestamo",
-            Fecha = fechaDevolucion
-        });
+            item.FechaDevolucion = fechaDevolucion;
+            item.DiasRetraso = diasRetraso;
+            item.EstadoItem = diasRetraso > 0 ? EstadoItemPrestamo.Vencido : EstadoItemPrestamo.Devuelto;
+            item.Libro.StockDisponible += 1;
 
-        var quedanItemsPendientes = await _context.ItemsPrestamo
-            .AnyAsync(i => i.IdPrestamo == item.IdPrestamo
-                && i.IdItemPrestamo != item.IdItemPrestamo
-                && i.FechaDevolucion == null);
-
-        if (!quedanItemsPendientes)
-        {
-            item.Prestamo.FechaDevolucion = fechaDevolucion;
-            item.Prestamo.Estado = "Finalizado";
+            _context.MovimientosStock.Add(new MovimientoStock
+            {
+                IdLibro = item.IdLibro,
+                LegajoEmpleado = legajoEmpleado,
+                TipoMovimiento = TipoMovimientoStock.AltaStock,
+                Cantidad = 1,
+                Motivo = "Devolucion de prestamo",
+                Fecha = DateTime.Now
+            });
         }
 
+        prestamo.FechaDevolucion = fechaDevolucion;
+        prestamo.Estado = "Finalizado";
+
         await _context.SaveChangesAsync();
+    }
+
+    private async Task DarDeBajaPrestamoAsync(int idPrestamo, int legajoAdministrador)
+    {
+        var prestamo = await _context.Prestamos
+            .Include(p => p.ItemsPrestamo)
+            .ThenInclude(i => i.Libro)
+            .FirstOrDefaultAsync(p => p.IdPrestamo == idPrestamo);
+
+        if (prestamo is null)
+        {
+            throw new InvalidOperationException("El prestamo indicado no existe.");
+        }
+
+        var pendientesPorLibro = prestamo.ItemsPrestamo
+            .Where(i => i.FechaDevolucion is null)
+            .GroupBy(i => i.Libro)
+            .ToList();
+
+        foreach (var grupo in pendientesPorLibro)
+        {
+            var libro = grupo.Key;
+            var cantidad = grupo.Count();
+
+            libro.StockDisponible += cantidad;
+
+            _context.MovimientosStock.Add(new MovimientoStock
+            {
+                IdLibro = libro.IdLibro,
+                LegajoEmpleado = legajoAdministrador,
+                TipoMovimiento = TipoMovimientoStock.AltaStock,
+                Cantidad = cantidad,
+                Motivo = "Restitución de stock por baja de prestamo por administrador",
+                Fecha = DateTime.Now
+            });
+        }
+
+        _context.Prestamos.Remove(prestamo);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task<DevolucionPrestamoViewModel?> CrearModeloDevolucionAsync(
+        int idPrestamo,
+        DateTime? fechaDevolucion = null)
+    {
+        var prestamo = await _context.Prestamos
+            .Include(p => p.Empleado)
+            .Include(p => p.ItemsPrestamo)
+            .ThenInclude(i => i.Libro)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdPrestamo == idPrestamo);
+
+        if (prestamo is null)
+        {
+            return null;
+        }
+
+        var itemsPendientes = prestamo.ItemsPrestamo
+            .Where(i => i.FechaDevolucion is null)
+            .OrderBy(i => i.Libro.Titulo)
+            .ToList();
+        var estaVencido = itemsPendientes.Count > 0
+            && prestamo.FechaEstimadaDevolucion.Date < DateTime.Today;
+
+        return new DevolucionPrestamoViewModel
+        {
+            IdPrestamo = prestamo.IdPrestamo,
+            Prestamo = $"Prestamo #{prestamo.IdPrestamo}",
+            Empleado = prestamo.Empleado.NombreCompleto,
+            Libros = itemsPendientes.Count == 0
+                ? "Sin libros pendientes de devolucion"
+                : string.Join(", ", itemsPendientes.Select(i => i.Libro.Titulo)),
+            FechaPrestamo = prestamo.Fecha,
+            FechaEstimadaDevolucion = prestamo.FechaEstimadaDevolucion,
+            FechaDevolucion = fechaDevolucion ?? DateTime.Today,
+            EstaVencido = estaVencido,
+            DiasVencido = estaVencido ? (DateTime.Today - prestamo.FechaEstimadaDevolucion.Date).Days : 0,
+            YaDevuelto = itemsPendientes.Count == 0
+        };
     }
 
     private int? ObtenerLegajoEmpleadoDesdeSesion()
@@ -317,7 +450,7 @@ public class PrestamosController : Controller
 
         ViewBag.EmpleadoLogueado = empleado is null
             ? "Empleado no identificado"
-            : $"{empleado.Apellido}, {empleado.Nombre} ({empleado.Legajo})";
+            : empleado.NombreCompleto;
 
         var libros = await _context.Libros
             .Where(l => l.Activo && l.StockDisponible > 0)

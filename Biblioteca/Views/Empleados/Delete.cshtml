@@ -8,11 +8,11 @@
 
 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-<p>Solo se podra eliminar si no tiene usuario ni prestamos asociados.</p>
+<p>Solo se podra eliminar si no tiene usuario, prestamos ni movimientos asociados.</p>
 
 <dl class="row">
     <dt class="col-sm-3">Empleado</dt>
-    <dd class="col-sm-9">@Model.Apellido, @Model.Nombre</dd>
+    <dd class="col-sm-9">@Model.NombreCompleto</dd>
     <dt class="col-sm-3">Usuario</dt>
     <dd class="col-sm-9">@Model.Usuario?.Email</dd>
 </dl>

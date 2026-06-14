@@ -160,9 +160,18 @@ public class LibrosController : Controller
     private async Task CargarListasAsync(Libro? libro = null)
     {
         ViewBag.IdAutor = new SelectList(
-            await _context.Autores.Where(a => a.Activo).OrderBy(a => a.Apellido).ThenBy(a => a.Nombre).ToListAsync(),
+            await _context.Autores
+                .Where(a => a.Activo)
+                .OrderBy(a => a.Nombre)
+                .ThenBy(a => a.Apellido)
+                .Select(a => new
+                {
+                    a.IdAutor,
+                    NombreCompleto = $"{a.Nombre} {a.Apellido}"
+                })
+                .ToListAsync(),
             "IdAutor",
-            "Apellido",
+            "NombreCompleto",
             libro?.IdAutor);
 
         ViewBag.IdCategoria = new SelectList(

@@ -3,17 +3,57 @@
 @{
     ViewData["Title"] = "Inicio";
     var cuenta = HttpContext.Session.GetString(SesionKeys.Cuenta);
+    var nombreEmpleado = HttpContext.Session.GetString(SesionKeys.NombreEmpleado);
     var rol = HttpContext.Session.GetString(SesionKeys.Rol);
     var estaAutenticado = !string.IsNullOrWhiteSpace(cuenta);
+    var identidadVisible = !string.IsNullOrWhiteSpace(nombreEmpleado) ? nombreEmpleado : cuenta;
+    var esAdministrador = string.Equals(rol, RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
-<div class="text-center py-5">
+<div class="py-5">
     <h1 class="display-5">Biblioteca</h1>
     @if (estaAutenticado)
     {
-        <p class="lead">Sesion iniciada como @cuenta (@rol).</p>
-        <a asp-controller="Libros" asp-action="Index" class="btn btn-primary">Ver libros</a>
-        <a asp-controller="Prestamos" asp-action="Index" class="btn btn-outline-primary">Ver prestamos</a>
+        <p class="lead">Sesion iniciada como @identidadVisible (@rol).</p>
+        @if (esAdministrador)
+        {
+            <div class="row g-3 mt-3">
+                <div class="col-md-4">
+                    <section class="border rounded p-3 h-100">
+                        <h2 class="h5">Prestamos</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Prestamos" asp-action="Index" class="btn btn-primary">Ver prestamos</a>
+                            <a asp-controller="MovimientosStock" asp-action="Index" class="btn btn-outline-primary">Ver movimientos</a>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-md-4">
+                    <section class="border rounded p-3 h-100">
+                        <h2 class="h5">Libros</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Libros" asp-action="Index" class="btn btn-primary">Ver libros</a>
+                            <a asp-controller="Autores" asp-action="Index" class="btn btn-outline-primary">Ver autores</a>
+                            <a asp-controller="Categorias" asp-action="Index" class="btn btn-outline-primary">Ver categorias</a>
+                            <a asp-controller="Editoriales" asp-action="Index" class="btn btn-outline-primary">Ver editoriales</a>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-md-4">
+                    <section class="border rounded p-3 h-100">
+                        <h2 class="h5">Gestion de usuarios</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Usuarios" asp-action="Index" class="btn btn-primary">Ver usuarios</a>
+                            <a asp-controller="Empleados" asp-action="Index" class="btn btn-outline-primary">Ver empleados</a>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        }
+        else
+        {
+            <a asp-controller="Libros" asp-action="Index" class="btn btn-primary">Ver libros</a>
+            <a asp-controller="Prestamos" asp-action="Index" class="btn btn-outline-primary">Ver prestamos</a>
+        }
     }
     else
     {

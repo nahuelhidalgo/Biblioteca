@@ -8,11 +8,13 @@ public class Usuario
 
     [Required]
     [Display(Name = "Cuenta")]
+    [EmailAddress(ErrorMessage = "Ingrese un email valido.")]
+    [RegularExpression(@"^[^@\s]+@[oO][rR][tT]\.[eE][dD][uU]\.[aA][rR]$", ErrorMessage = "La cuenta debe pertenecer al dominio @ort.edu.ar.")]
     [StringLength(150)]
     public string Email { get; set; } = string.Empty;
 
     [Required]
-    [Display(Name = "Contrasenia")]
+    [Display(Name = "Contraseña")]
     [StringLength(255)]
     public string Password { get; set; } = string.Empty;
 

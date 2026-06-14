@@ -15,14 +15,14 @@ public class AnioPublicacionAttribute : ValidationAttribute
 
         if (value is not int anio)
         {
-            return new ValidationResult("El anio de publicacion no es valido.");
+            return new ValidationResult("El año de publicacion no es valido.");
         }
 
         var anioActual = DateTime.Today.Year;
 
         if (anio < AnioMinimo || anio > anioActual)
         {
-            return new ValidationResult($"El anio de publicacion debe estar entre {AnioMinimo} y {anioActual}.");
+            return new ValidationResult($"El año de publicacion debe estar entre {AnioMinimo} y {anioActual}.");
         }
 
         return ValidationResult.Success;

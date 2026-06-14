@@ -27,7 +27,7 @@
         <tr>
             <td>@item.Email</td>
             <td>@item.Rol</td>
-            <td>@item.Empleado.Apellido, @item.Empleado.Nombre</td>
+            <td>@item.Empleado.NombreCompleto</td>
             <td>@(item.Activo ? "Si" : "No")</td>
             <td>@item.UltimoAcceso?.ToString("dd/MM/yyyy HH:mm")</td>
             <td class="text-end">

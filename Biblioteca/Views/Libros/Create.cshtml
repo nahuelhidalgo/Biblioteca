@@ -20,17 +20,26 @@
     </div>
     <div class="mb-3">
         <label asp-for="IdAutor" class="form-label">Autor</label>
-        <select asp-for="IdAutor" class="form-select" asp-items="ViewBag.IdAutor"></select>
+        <div class="input-group">
+            <select asp-for="IdAutor" class="form-select" asp-items="ViewBag.IdAutor"></select>
+            <a asp-controller="Autores" asp-action="Create" class="btn btn-outline-primary">Crear Autor</a>
+        </div>
         <span asp-validation-for="IdAutor" class="text-danger"></span>
     </div>
     <div class="mb-3">
-        <label asp-for="IdCategoria" class="form-label">Categoria</label>
-        <select asp-for="IdCategoria" class="form-select" asp-items="ViewBag.IdCategoria"></select>
+        <label asp-for="IdCategoria" class="form-label">Categoría</label>
+        <div class="input-group">
+            <select asp-for="IdCategoria" class="form-select" asp-items="ViewBag.IdCategoria"></select>
+            <a asp-controller="Categorias" asp-action="Create" class="btn btn-outline-primary">Crear Categoría</a>
+        </div>
         <span asp-validation-for="IdCategoria" class="text-danger"></span>
     </div>
     <div class="mb-3">
         <label asp-for="IdEditorial" class="form-label">Editorial</label>
-        <select asp-for="IdEditorial" class="form-select" asp-items="ViewBag.IdEditorial"></select>
+        <div class="input-group">
+            <select asp-for="IdEditorial" class="form-select" asp-items="ViewBag.IdEditorial"></select>
+            <a asp-controller="Editoriales" asp-action="Create" class="btn btn-outline-primary">Crear Editorial</a>
+        </div>
         <span asp-validation-for="IdEditorial" class="text-danger"></span>
     </div>
     <div class="mb-3">

@@ -25,40 +25,40 @@ public static class BibliotecaSeedData
         var empleado1 = await ObtenerOCrearEmpleadoAsync(
             context,
             dni: "30123456",
-            nombre: "Empleado 1",
-            apellido: "Biblioteca",
+            nombre: "Juan",
+            apellido: "Perez",
             telefono: "1123456789",
             direccion: "Sucursal Central");
 
         var empleado2 = await ObtenerOCrearEmpleadoAsync(
             context,
             dni: "30234567",
-            nombre: "Empleado 2",
-            apellido: "Biblioteca",
+            nombre: "Ana Maria",
+            apellido: "Perez",
             telefono: "1134567890",
             direccion: "Sucursal Central");
 
         var gerente = await ObtenerOCrearEmpleadoAsync(
             context,
             dni: "30345678",
-            nombre: "Gerente",
-            apellido: "Biblioteca",
+            nombre: "Carlos",
+            apellido: "Gomez",
             telefono: "1145678901",
             direccion: "Administracion");
 
         var operadorSistema = await ObtenerOCrearEmpleadoAsync(
             context,
             dni: "30456789",
-            nombre: "Operador",
-            apellido: "Sistema",
+            nombre: "Lucia",
+            apellido: "Fernandez",
             telefono: "1156789012",
             direccion: "Sucursal Central");
 
         var administradorSistema = await ObtenerOCrearEmpleadoAsync(
             context,
             dni: "30567890",
-            nombre: "Administrador",
-            apellido: "Sistema",
+            nombre: "Martin",
+            apellido: "Silva",
             telefono: "1167890123",
             direccion: "Administracion");
 
@@ -66,35 +66,35 @@ public static class BibliotecaSeedData
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "Operador1",
+            cuenta: "operador1@ort.edu.ar",
             password: "Operador1",
             rol: "Operador",
             legajoEmpleado: empleado1.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "Operador2",
+            cuenta: "operador2@ort.edu.ar",
             password: "Operador2",
             rol: "Operador",
             legajoEmpleado: empleado2.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "Operador3",
+            cuenta: "operador3@ort.edu.ar",
             password: "Operador3",
             rol: "Operador",
             legajoEmpleado: operadorSistema.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "Administrador1",
+            cuenta: "administrador1@ort.edu.ar",
             password: "Administrador1",
             rol: "Administrador",
             legajoEmpleado: gerente.Legajo);
 
         await ObtenerOCrearUsuarioPorEmpleadoAsync(
             context,
-            cuenta: "Administrador2",
+            cuenta: "administrador2@ort.edu.ar",
             password: "Administrador2",
             rol: "Administrador",
             legajoEmpleado: administradorSistema.Legajo);
@@ -210,11 +210,11 @@ public static class BibliotecaSeedData
                 libro.StockTotal += cantidad;
                 libro.StockDisponible += cantidad;
 
-                context.MovimientosStock.Add(new MovimientoStock
-                {
-                    IdLibro = libro.IdLibro,
-                    TipoMovimiento = TipoMovimientoStock.AltaStock,
-                    Cantidad = cantidad,
+            context.MovimientosStock.Add(new MovimientoStock
+            {
+                IdLibro = libro.IdLibro,
+                TipoMovimiento = TipoMovimientoStock.AltaStock,
+                Cantidad = cantidad,
                     Motivo = "Carga inicial de datos",
                     Fecha = DateTime.Now
                 });
@@ -303,10 +303,11 @@ public static class BibliotecaSeedData
             context.MovimientosStock.Add(new MovimientoStock
             {
                 IdLibro = libro.IdLibro,
+                LegajoEmpleado = legajoEmpleado,
                 TipoMovimiento = TipoMovimientoStock.Prestado,
                 Cantidad = cantidad,
                 Motivo = "Prestamo registrado",
-                Fecha = fechaPrestamo
+                Fecha = DateTime.Now
             });
         }
 
@@ -337,10 +338,11 @@ public static class BibliotecaSeedData
         context.MovimientosStock.Add(new MovimientoStock
         {
             IdLibro = item.IdLibro,
+            LegajoEmpleado = item.Prestamo.LegajoEmpleado,
             TipoMovimiento = TipoMovimientoStock.AltaStock,
             Cantidad = 1,
             Motivo = "Devolucion de prestamo",
-            Fecha = fechaDevolucion
+            Fecha = DateTime.Now
         });
 
         await context.SaveChangesAsync();
@@ -358,6 +360,11 @@ public static class BibliotecaSeedData
 
         if (empleado is not null)
         {
+            empleado.Nombre = nombre;
+            empleado.Apellido = apellido;
+            empleado.Telefono = telefono;
+            empleado.Direccion = direccion;
+
             return empleado;
         }
 

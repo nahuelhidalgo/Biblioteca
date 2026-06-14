@@ -1,21 +1,18 @@
 @model IEnumerable<MovimientoStock>
 
 @{
-    ViewData["Title"] = "Movimientos de stock";
+    ViewData["Title"] = "Movimientos";
 }
 
-<h1>Movimientos de stock</h1>
-
-<p>
-    <a asp-action="Create" class="btn btn-primary">Registrar ajuste</a>
-</p>
+<h1>Movimientos</h1>
 
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Fecha</th>
+            <th>ISBN</th>
             <th>Libro</th>
-            <th>Tipo</th>
+            <th>Tipo de movimiento</th>
             <th>Cantidad</th>
             <th>Motivo</th>
             <th></th>
@@ -26,6 +23,7 @@
 {
         <tr>
             <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@item.Libro.ISBN</td>
             <td>@item.Libro.Titulo</td>
             <td>@item.TipoMovimiento</td>
             <td>@item.Cantidad</td>

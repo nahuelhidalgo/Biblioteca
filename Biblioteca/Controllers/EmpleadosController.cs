@@ -37,6 +37,7 @@ public class EmpleadosController : Controller
         var empleado = await _context.Empleados
             .Include(e => e.Usuario)
             .Include(e => e.Prestamos)
+            .Include(e => e.MovimientosStock)
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Legajo == id);
 
@@ -114,6 +115,7 @@ public class EmpleadosController : Controller
         var empleado = await _context.Empleados
             .Include(e => e.Usuario)
             .Include(e => e.Prestamos)
+            .Include(e => e.MovimientosStock)
             .FirstOrDefaultAsync(e => e.Legajo == id);
 
         if (empleado is null)
@@ -121,9 +123,9 @@ public class EmpleadosController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        if (empleado.Usuario is not null || empleado.Prestamos.Any())
+        if (empleado.Usuario is not null || empleado.Prestamos.Any() || empleado.MovimientosStock.Any())
         {
-            ModelState.AddModelError(string.Empty, "No se puede eliminar un empleado con usuario o prestamos asociados.");
+            ModelState.AddModelError(string.Empty, "No se puede eliminar un empleado con usuario, prestamos o movimientos asociados.");
             return View("Delete", empleado);
         }
 

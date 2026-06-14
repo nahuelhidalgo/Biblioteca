@@ -29,6 +29,7 @@ public class Libro
     public Autor Autor { get; set; } = null!;
 
     [AnioPublicacion]
+    [Display(Name = "Año de publicación")]
     public int AnioPublicacion { get; set; }
 
     [Range(0, int.MaxValue)]

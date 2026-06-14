@@ -140,6 +140,11 @@ public class BibliotecaContext : DbContext
                 .HasForeignKey(e => e.IdLibro)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(e => e.Empleado)
+                .WithMany(e => e.MovimientosStock)
+                .HasForeignKey(e => e.LegajoEmpleado)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.ToTable(t =>
             {
                 t.HasCheckConstraint("CK_MovimientosStock_Cantidad", "[Cantidad] > 0");

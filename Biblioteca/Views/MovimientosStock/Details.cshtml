@@ -9,14 +9,32 @@
 <dl class="row">
     <dt class="col-sm-3">Fecha</dt>
     <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
+    <dt class="col-sm-3">ID de libro</dt>
+    <dd class="col-sm-9">@Model.Libro.IdLibro</dd>
+    <dt class="col-sm-3">ISBN</dt>
+    <dd class="col-sm-9">@Model.Libro.ISBN</dd>
     <dt class="col-sm-3">Libro</dt>
     <dd class="col-sm-9">@Model.Libro.Titulo</dd>
-    <dt class="col-sm-3">Tipo</dt>
+    <dt class="col-sm-3">Autor</dt>
+    <dd class="col-sm-9">@Model.Libro.Autor.Nombre @Model.Libro.Autor.Apellido</dd>
+    <dt class="col-sm-3">Categoria</dt>
+    <dd class="col-sm-9">@Model.Libro.Categoria.Nombre</dd>
+    <dt class="col-sm-3">Editorial</dt>
+    <dd class="col-sm-9">@Model.Libro.Editorial.Nombre</dd>
+    <dt class="col-sm-3">Año de publicación</dt>
+    <dd class="col-sm-9">@Model.Libro.AnioPublicacion</dd>
+    <dt class="col-sm-3">Stock actual</dt>
+    <dd class="col-sm-9">@Model.Libro.StockDisponible disponible de @Model.Libro.StockTotal</dd>
+    <dt class="col-sm-3">Activo</dt>
+    <dd class="col-sm-9">@(Model.Libro.Activo ? "Si" : "No")</dd>
+    <dt class="col-sm-3">Tipo de movimiento</dt>
     <dd class="col-sm-9">@Model.TipoMovimiento</dd>
     <dt class="col-sm-3">Cantidad</dt>
     <dd class="col-sm-9">@Model.Cantidad</dd>
     <dt class="col-sm-3">Motivo</dt>
     <dd class="col-sm-9">@Model.Motivo</dd>
+    <dt class="col-sm-3">Responsable</dt>
+    <dd class="col-sm-9">@(Model.Empleado?.NombreCompleto ?? "Sin responsable registrado")</dd>
 </dl>
 
 <a asp-action="Index" class="btn btn-secondary">Volver</a>

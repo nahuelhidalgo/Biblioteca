@@ -2,38 +2,76 @@
 
 @{
     ViewData["Title"] = "Registrar devolucion";
+    var prestamoCargado = Model.IdPrestamo > 0 && !string.IsNullOrWhiteSpace(Model.Prestamo);
 }
 
 <h1>Registrar devolucion</h1>
 
-<form asp-action="Devolver">
-    <input type="hidden" asp-for="IdItemPrestamo" />
-    <input type="hidden" asp-for="Prestamo" />
-    <input type="hidden" asp-for="Libro" />
-    <input type="hidden" asp-for="FechaPrestamo" />
-    <input type="hidden" asp-for="FechaEstimadaDevolucion" />
-
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-    <dl class="row">
-        <dt class="col-sm-3">Prestamo</dt>
-        <dd class="col-sm-9">@Model.Prestamo</dd>
-        <dt class="col-sm-3">Libro</dt>
-        <dd class="col-sm-9">@Model.Libro</dd>
-        <dt class="col-sm-3">Fecha de prestamo</dt>
-        <dd class="col-sm-9">@Model.FechaPrestamo.ToString("dd/MM/yyyy")</dd>
-        <dt class="col-sm-3">Fecha estimada</dt>
-        <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
-    </dl>
-
-    <div class="mb-3">
-        <label asp-for="FechaDevolucion" class="form-label"></label>
-        <input asp-for="FechaDevolucion" class="form-control" />
-        <span asp-validation-for="FechaDevolucion" class="text-danger"></span>
+<form asp-action="Devolver" method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+        <label asp-for="IdPrestamo" class="form-label"></label>
+        <input id="IdPrestamo" name="id" type="number" class="form-control" value="@(Model.IdPrestamo > 0 ? Model.IdPrestamo.ToString() : string.Empty)" />
+        <span asp-validation-for="IdPrestamo" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Registrar devolucion</button>
-    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Buscar prestamo</button>
+    </div>
 </form>
+
+@if (prestamoCargado)
+{
+    <form asp-action="Devolver" method="post">
+        <input type="hidden" asp-for="IdPrestamo" />
+        <input type="hidden" asp-for="Prestamo" />
+        <input type="hidden" asp-for="Empleado" />
+        <input type="hidden" asp-for="Libros" />
+        <input type="hidden" asp-for="FechaPrestamo" />
+        <input type="hidden" asp-for="FechaEstimadaDevolucion" />
+        <input type="hidden" asp-for="FechaDevolucion" />
+        <input type="hidden" asp-for="EstaVencido" />
+        <input type="hidden" asp-for="DiasVencido" />
+        <input type="hidden" asp-for="YaDevuelto" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        @if (Model.EstaVencido)
+        {
+            <div class="alert alert-warning">
+                Este prestamo esta vencido hace @Model.DiasVencido dia(s). La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy").
+            </div>
+        }
+
+        @if (Model.YaDevuelto)
+        {
+            <div class="alert alert-info">
+                Este prestamo no tiene libros pendientes de devolución.
+            </div>
+        }
+
+        <dl class="row">
+            <dt class="col-sm-3">Prestamo</dt>
+            <dd class="col-sm-9">@Model.Prestamo</dd>
+            <dt class="col-sm-3">Empleado</dt>
+            <dd class="col-sm-9">@Model.Empleado</dd>
+            <dt class="col-sm-3">Libros pendientes</dt>
+            <dd class="col-sm-9">@Model.Libros</dd>
+            <dt class="col-sm-3">Fecha de creación</dt>
+            <dd class="col-sm-9">@Model.FechaPrestamo.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Fecha de devolución</dt>
+            <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
+        </dl>
+
+        @if (!Model.YaDevuelto)
+        {
+            <button type="submit" class="btn btn-primary">Registrar devolucion</button>
+        }
+        <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    </form>
+}
+else
+{
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+}
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
