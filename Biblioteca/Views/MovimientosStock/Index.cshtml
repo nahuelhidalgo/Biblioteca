@@ -2,18 +2,88 @@
 
 @{
     ViewData["Title"] = "Movimientos";
+    var orden = ViewBag.Orden as string ?? "fecha";
+    var direccion = ViewBag.Direccion as string ?? "desc";
+    var proximaDireccionFecha = orden == "fecha" && direccion == "asc" ? "desc" : "asc";
+    var proximaDireccionCantidad = orden == "cantidad" && direccion == "asc" ? "desc" : "asc";
+    var legajoEmpleadoFiltro = ViewBag.LegajoEmpleadoFiltro;
+    var fechaCreacionFiltro = ViewBag.FechaCreacionFiltro as string;
+    var idLibroFiltro = ViewBag.IdLibroFiltro;
+    var tipoMovimientoFiltro = ViewBag.TipoMovimientoFiltro as string;
 }
 
 <h1>Movimientos</h1>
 
+<form asp-action="Index" method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label" for="legajoEmpleado">Creador del prestamo</label>
+        <select id="legajoEmpleado" name="legajoEmpleado" class="form-select" asp-items="ViewBag.Empleados">
+            <option value="">Todos</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="fechaCreacion">Fecha de creación</label>
+        <input id="fechaCreacion" name="fechaCreacion" type="date" value="@fechaCreacionFiltro" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="idLibro">Libro prestado</label>
+        <select id="idLibro" name="idLibro" class="form-select" asp-items="ViewBag.Libros">
+            <option value="">Todos</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="tipoMovimiento">Tipo de movimiento</label>
+        <select id="tipoMovimiento" name="tipoMovimiento" class="form-select">
+            <option value="">Todos</option>
+            @foreach (var tipo in Enum.GetValues<TipoMovimientoStock>())
+            {
+                if (tipoMovimientoFiltro == tipo.ToString())
+                {
+                    <option value="@tipo" selected>@tipo</option>
+                }
+                else
+                {
+                    <option value="@tipo">@tipo</option>
+                }
+            }
+        </select>
+    </div>
+    <input type="hidden" name="orden" value="@orden" />
+    <input type="hidden" name="direccion" value="@direccion" />
+    <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Limpiar filtros</a>
+    </div>
+</form>
+
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Fecha</th>
+            <th>
+                <a asp-action="Index"
+                   asp-route-legajoEmpleado="@legajoEmpleadoFiltro"
+                   asp-route-fechaCreacion="@fechaCreacionFiltro"
+                   asp-route-idLibro="@idLibroFiltro"
+                   asp-route-tipoMovimiento="@tipoMovimientoFiltro"
+                   asp-route-orden="fecha"
+                   asp-route-direccion="@proximaDireccionFecha">
+                    Fecha @(orden == "fecha" ? (direccion == "asc" ? "asc" : "desc") : "")
+                </a>
+            </th>
+            <th>ID prestamo</th>
             <th>ISBN</th>
             <th>Libro</th>
-            <th>Tipo de movimiento</th>
-            <th>Cantidad</th>
+            <th>
+                <a asp-action="Index"
+                   asp-route-legajoEmpleado="@legajoEmpleadoFiltro"
+                   asp-route-fechaCreacion="@fechaCreacionFiltro"
+                   asp-route-idLibro="@idLibroFiltro"
+                   asp-route-tipoMovimiento="@tipoMovimientoFiltro"
+                   asp-route-orden="cantidad"
+                   asp-route-direccion="@proximaDireccionCantidad">
+                    Cantidad @(orden == "cantidad" ? (direccion == "asc" ? "asc" : "desc") : "")
+                </a>
+            </th>
             <th>Motivo</th>
             <th></th>
         </tr>
@@ -23,9 +93,9 @@
 {
         <tr>
             <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@(item.IdPrestamo?.ToString() ?? "-")</td>
             <td>@item.Libro.ISBN</td>
             <td>@item.Libro.Titulo</td>
-            <td>@item.TipoMovimiento</td>
             <td>@item.Cantidad</td>
             <td>@item.Motivo</td>
             <td class="text-end">

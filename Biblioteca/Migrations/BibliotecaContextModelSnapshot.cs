@@ -266,6 +266,9 @@ namespace Biblioteca.Migrations
                     b.Property<int>("IdLibro")
                         .HasColumnType("int");
 
+                    b.Property<int?>("IdPrestamo")
+                        .HasColumnType("int");
+
                     b.Property<string>("Motivo")
                         .IsRequired()
                         .HasMaxLength(300)
@@ -282,6 +285,8 @@ namespace Biblioteca.Migrations
                     b.HasKey("IdMovimientoStock");
 
                     b.HasIndex("IdLibro");
+
+                    b.HasIndex("IdPrestamo");
 
                     b.HasIndex("LegajoEmpleado");
 

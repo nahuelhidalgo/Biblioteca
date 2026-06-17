@@ -130,6 +130,8 @@ public class BibliotecaContext : DbContext
         {
             entity.HasKey(e => e.IdMovimientoStock);
 
+            entity.HasIndex(e => e.IdPrestamo);
+
             entity.Property(e => e.TipoMovimiento)
                 .HasConversion<string>()
                 .HasMaxLength(30)

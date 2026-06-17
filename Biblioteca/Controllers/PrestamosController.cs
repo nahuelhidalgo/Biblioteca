@@ -4,7 +4,6 @@ using Biblioteca.Modelos;
 using Biblioteca.Seguridad;
 using Biblioteca.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteca.Controllers;
@@ -24,11 +23,22 @@ public class PrestamosController : Controller
         var ahora = DateTime.Now;
         var mostrarVencidos = string.Equals(vista, "vencidos", StringComparison.OrdinalIgnoreCase);
         var ordenarPorFecha = string.Equals(orden, "fecha", StringComparison.OrdinalIgnoreCase);
+        var legajoEmpleado = ObtenerLegajoEmpleadoDesdeSesion();
+        var esAdministrador = EsAdministrador();
 
         IQueryable<Prestamo> prestamosQuery = _context.Prestamos
             .Include(p => p.Empleado)
             .Include(p => p.ItemsPrestamo)
             .ThenInclude(i => i.Libro);
+
+        if (!esAdministrador && legajoEmpleado is not null)
+        {
+            prestamosQuery = prestamosQuery.Where(p => p.LegajoEmpleado == legajoEmpleado.Value);
+        }
+        else if (!esAdministrador)
+        {
+            prestamosQuery = prestamosQuery.Where(p => false);
+        }
 
         if (mostrarVencidos)
         {
@@ -63,6 +73,11 @@ public class PrestamosController : Controller
             .ThenInclude(i => i.Libro)
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.IdPrestamo == id);
+
+        if (prestamo is not null && !PuedeAccederPrestamo(prestamo.LegajoEmpleado))
+        {
+            return NotFound();
+        }
 
         return prestamo is null ? NotFound() : View(prestamo);
     }
@@ -117,7 +132,6 @@ public class PrestamosController : Controller
             return RedirectToAction("Login", "Cuentas");
         }
 
-        await CargarDatosPrestamoAsync(legajoEmpleado.Value);
         return View(new PrestamoCreateViewModel());
     }
 
@@ -132,23 +146,65 @@ public class PrestamosController : Controller
             return RedirectToAction("Login", "Cuentas");
         }
 
-        if (prestamoModel.LibrosIds.Count == 0)
+        await RefrescarCarritoAsync(prestamoModel);
+
+        if (prestamoModel.Accion?.StartsWith("quitar:", StringComparison.OrdinalIgnoreCase) == true)
         {
-            ModelState.AddModelError(nameof(PrestamoCreateViewModel.LibrosIds), "Debe seleccionar al menos un libro.");
+            var idTexto = prestamoModel.Accion["quitar:".Length..];
+
+            if (int.TryParse(idTexto, out var idLibro))
+            {
+                prestamoModel.Items.RemoveAll(i => i.IdLibro == idLibro);
+            }
+
+            ModelState.Clear();
+            prestamoModel.Accion = null;
+            return View(prestamoModel);
         }
+
+        if (string.Equals(prestamoModel.Accion, "agregar", StringComparison.OrdinalIgnoreCase))
+        {
+            await AgregarLibroAlCarritoAsync(prestamoModel);
+
+            if (!ModelState.IsValid)
+            {
+                return View(prestamoModel);
+            }
+
+            ModelState.Clear();
+            prestamoModel.ISBN = string.Empty;
+            prestamoModel.Cantidad = 1;
+            prestamoModel.Accion = null;
+            return View(prestamoModel);
+        }
+
+        ModelState.Remove(nameof(PrestamoCreateViewModel.ISBN));
+        ModelState.Remove(nameof(PrestamoCreateViewModel.Cantidad));
+        ModelState.Remove(nameof(PrestamoCreateViewModel.Accion));
+
+        if (prestamoModel.Items.Count == 0)
+        {
+            ModelState.AddModelError(nameof(PrestamoCreateViewModel.Items), "Debe agregar al menos un libro al prestamo.");
+        }
+
+        await ValidarCarritoAsync(prestamoModel);
 
         if (!ModelState.IsValid)
         {
-            await CargarDatosPrestamoAsync(legajoEmpleado.Value, prestamoModel);
             return View(prestamoModel);
         }
 
         try
         {
+            var fechaPrestamo = DateTime.Now;
+            var librosIds = prestamoModel.Items
+                .SelectMany(item => Enumerable.Repeat(item.IdLibro, item.Cantidad))
+                .ToList();
+
             await RegistrarPrestamoAsync(
                 legajoEmpleado.Value,
-                prestamoModel.LibrosIds,
-                prestamoModel.FechaPrestamo,
+                librosIds,
+                fechaPrestamo,
                 prestamoModel.FechaEstimadaDevolucion);
 
             return RedirectToAction(nameof(Index));
@@ -156,7 +212,6 @@ public class PrestamosController : Controller
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
-            await CargarDatosPrestamoAsync(legajoEmpleado.Value, prestamoModel);
             return View(prestamoModel);
         }
     }
@@ -279,16 +334,25 @@ public class PrestamosController : Controller
             });
         }
 
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
         _context.Prestamos.Add(prestamo);
 
         foreach (var libro in libros)
         {
             var cantidad = cantidadesPorLibro[libro.IdLibro];
             libro.StockDisponible -= cantidad;
+        }
 
+        await _context.SaveChangesAsync();
+
+        foreach (var libro in libros)
+        {
+            var cantidad = cantidadesPorLibro[libro.IdLibro];
             _context.MovimientosStock.Add(new MovimientoStock
             {
                 IdLibro = libro.IdLibro,
+                IdPrestamo = prestamo.IdPrestamo,
                 LegajoEmpleado = legajoEmpleado,
                 TipoMovimiento = TipoMovimientoStock.Prestado,
                 Cantidad = cantidad,
@@ -298,8 +362,147 @@ public class PrestamosController : Controller
         }
 
         await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         return prestamo;
+    }
+
+    private async Task AgregarLibroAlCarritoAsync(PrestamoCreateViewModel prestamoModel)
+    {
+        var isbn = prestamoModel.ISBN.Trim();
+
+        if (string.IsNullOrWhiteSpace(isbn))
+        {
+            ModelState.AddModelError(nameof(PrestamoCreateViewModel.ISBN), "Ingrese el ISBN del libro.");
+            return;
+        }
+
+        if (prestamoModel.Cantidad <= 0)
+        {
+            ModelState.AddModelError(nameof(PrestamoCreateViewModel.Cantidad), "La cantidad debe ser mayor a cero.");
+            return;
+        }
+
+        var libro = await _context.Libros
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.ISBN == isbn);
+
+        if (libro is null)
+        {
+            ModelState.AddModelError(nameof(PrestamoCreateViewModel.ISBN), "No existe un libro con ese ISBN.");
+            return;
+        }
+
+        if (!libro.Activo)
+        {
+            ModelState.AddModelError(nameof(PrestamoCreateViewModel.ISBN), "El libro encontrado no esta activo.");
+            return;
+        }
+
+        var itemExistente = prestamoModel.Items.FirstOrDefault(i => i.IdLibro == libro.IdLibro);
+        var cantidadActual = itemExistente?.Cantidad ?? 0;
+        var cantidadTotal = cantidadActual + prestamoModel.Cantidad;
+
+        if (libro.StockDisponible < cantidadTotal)
+        {
+            ModelState.AddModelError(
+                nameof(PrestamoCreateViewModel.Cantidad),
+                $"Stock insuficiente. Disponible: {libro.StockDisponible}; en carrito: {cantidadActual}.");
+            return;
+        }
+
+        if (itemExistente is null)
+        {
+            prestamoModel.Items.Add(new PrestamoCarritoItemViewModel
+            {
+                IdLibro = libro.IdLibro,
+                ISBN = libro.ISBN,
+                Titulo = libro.Titulo,
+                StockDisponible = libro.StockDisponible,
+                Cantidad = prestamoModel.Cantidad
+            });
+        }
+        else
+        {
+            itemExistente.ISBN = libro.ISBN;
+            itemExistente.Titulo = libro.Titulo;
+            itemExistente.StockDisponible = libro.StockDisponible;
+            itemExistente.Cantidad = cantidadTotal;
+        }
+    }
+
+    private async Task ValidarCarritoAsync(PrestamoCreateViewModel prestamoModel)
+    {
+        var ids = prestamoModel.Items.Select(i => i.IdLibro).Distinct().ToList();
+        var libros = await _context.Libros
+            .Where(l => ids.Contains(l.IdLibro))
+            .AsNoTracking()
+            .ToDictionaryAsync(l => l.IdLibro);
+
+        foreach (var item in prestamoModel.Items)
+        {
+            if (!libros.TryGetValue(item.IdLibro, out var libro))
+            {
+                ModelState.AddModelError(string.Empty, $"El libro '{item.Titulo}' ya no existe.");
+                continue;
+            }
+
+            if (!libro.Activo)
+            {
+                ModelState.AddModelError(string.Empty, $"El libro '{libro.Titulo}' no esta activo.");
+            }
+
+            if (item.Cantidad <= 0)
+            {
+                ModelState.AddModelError(string.Empty, $"La cantidad de '{libro.Titulo}' debe ser mayor a cero.");
+            }
+
+            if (item.Cantidad > libro.StockDisponible)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    $"Stock insuficiente para '{libro.Titulo}'. Disponible: {libro.StockDisponible}.");
+            }
+        }
+    }
+
+    private async Task RefrescarCarritoAsync(PrestamoCreateViewModel prestamoModel)
+    {
+        prestamoModel.Items = prestamoModel.Items
+            .Where(i => i.IdLibro > 0 && i.Cantidad > 0)
+            .GroupBy(i => i.IdLibro)
+            .Select(g => new PrestamoCarritoItemViewModel
+            {
+                IdLibro = g.Key,
+                Cantidad = g.Sum(i => i.Cantidad),
+                ISBN = g.First().ISBN,
+                Titulo = g.First().Titulo,
+                StockDisponible = g.First().StockDisponible
+            })
+            .ToList();
+
+        if (prestamoModel.Items.Count == 0)
+        {
+            return;
+        }
+
+        var ids = prestamoModel.Items.Select(i => i.IdLibro).ToList();
+        var libros = await _context.Libros
+            .Where(l => ids.Contains(l.IdLibro))
+            .AsNoTracking()
+            .ToDictionaryAsync(l => l.IdLibro);
+
+        foreach (var item in prestamoModel.Items)
+        {
+            if (!libros.TryGetValue(item.IdLibro, out var libro))
+            {
+                continue;
+            }
+
+            item.ISBN = libro.ISBN;
+            item.Titulo = libro.Titulo;
+            item.StockDisponible = libro.StockDisponible;
+        }
     }
 
     private async Task RegistrarDevolucionAsync(int idPrestamo, DateTime fechaDevolucion, int legajoEmpleado)
@@ -312,6 +515,11 @@ public class PrestamosController : Controller
         if (prestamo is null)
         {
             throw new InvalidOperationException("El prestamo indicado no existe.");
+        }
+
+        if (!PuedeAccederPrestamo(prestamo.LegajoEmpleado))
+        {
+            throw new InvalidOperationException("No tiene permisos para operar este prestamo.");
         }
 
         var itemsPendientes = prestamo.ItemsPrestamo
@@ -340,6 +548,7 @@ public class PrestamosController : Controller
             _context.MovimientosStock.Add(new MovimientoStock
             {
                 IdLibro = item.IdLibro,
+                IdPrestamo = prestamo.IdPrestamo,
                 LegajoEmpleado = legajoEmpleado,
                 TipoMovimiento = TipoMovimientoStock.AltaStock,
                 Cantidad = 1,
@@ -381,6 +590,7 @@ public class PrestamosController : Controller
             _context.MovimientosStock.Add(new MovimientoStock
             {
                 IdLibro = libro.IdLibro,
+                IdPrestamo = prestamo.IdPrestamo,
                 LegajoEmpleado = legajoAdministrador,
                 TipoMovimiento = TipoMovimientoStock.AltaStock,
                 Cantidad = cantidad,
@@ -405,6 +615,11 @@ public class PrestamosController : Controller
             .FirstOrDefaultAsync(p => p.IdPrestamo == idPrestamo);
 
         if (prestamo is null)
+        {
+            return null;
+        }
+
+        if (!PuedeAccederPrestamo(prestamo.LegajoEmpleado))
         {
             return null;
         }
@@ -443,26 +658,22 @@ public class PrestamosController : Controller
             : null;
     }
 
-    private async Task CargarDatosPrestamoAsync(int legajoEmpleado, PrestamoCreateViewModel? model = null)
+    private bool PuedeAccederPrestamo(int legajoEmpleadoPrestamo)
     {
-        var empleado = await _context.Empleados
-            .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Legajo == legajoEmpleado);
+        if (EsAdministrador())
+        {
+            return true;
+        }
 
-        ViewBag.EmpleadoLogueado = empleado is null
-            ? "Empleado no identificado"
-            : empleado.NombreCompleto;
+        var legajoEmpleado = ObtenerLegajoEmpleadoDesdeSesion();
 
-        var libros = await _context.Libros
-            .Where(l => l.Activo && l.StockDisponible > 0)
-            .OrderBy(l => l.Titulo)
-            .Select(l => new
-            {
-                l.IdLibro,
-                Descripcion = $"{l.Titulo} - Disponible: {l.StockDisponible}"
-            })
-            .ToListAsync();
+        return legajoEmpleado == legajoEmpleadoPrestamo;
+    }
 
-        ViewBag.Libros = new MultiSelectList(libros, "IdLibro", "Descripcion", model?.LibrosIds);
+    private bool EsAdministrador()
+    {
+        var rol = HttpContext.Session.GetString(SesionKeys.Rol);
+
+        return string.Equals(rol, RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -73,6 +73,7 @@ public class LibrosController : Controller
     {
         libro.StockTotal = 0;
         libro.StockDisponible = 0;
+        LimpiarValidacionesDeNavegacion();
 
         if (!ModelState.IsValid)
         {
@@ -113,6 +114,8 @@ public class LibrosController : Controller
         {
             return NotFound();
         }
+
+        LimpiarValidacionesDeNavegacion();
 
         if (!ModelState.IsValid)
         {
@@ -185,5 +188,14 @@ public class LibrosController : Controller
             "IdEditorial",
             "Nombre",
             libro?.IdEditorial);
+    }
+
+    private void LimpiarValidacionesDeNavegacion()
+    {
+        ModelState.Remove(nameof(Libro.Autor));
+        ModelState.Remove(nameof(Libro.Categoria));
+        ModelState.Remove(nameof(Libro.Editorial));
+        ModelState.Remove(nameof(Libro.ItemsPrestamo));
+        ModelState.Remove(nameof(Libro.MovimientosStock));
     }
 }

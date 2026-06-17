@@ -6,6 +6,11 @@
 
 <h1>Empleados</h1>
 
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
 <p>
     <a asp-action="Create" class="btn btn-primary">Crear empleado</a>
 </p>

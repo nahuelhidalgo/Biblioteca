@@ -51,8 +51,28 @@
         }
         else
         {
-            <a asp-controller="Libros" asp-action="Index" class="btn btn-primary">Ver libros</a>
-            <a asp-controller="Prestamos" asp-action="Index" class="btn btn-outline-primary">Ver prestamos</a>
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <section class="border rounded p-3 h-100">
+                        <h2 class="h5">Prestamos</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Prestamos" asp-action="Index" class="btn btn-outline-primary">Ver prestamos</a>
+                            <a asp-controller="Prestamos" asp-action="Index" asp-route-vista="vencidos" class="btn btn-outline-primary">Ver prestamos vencidos</a>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-md-6">
+                    <section class="border rounded p-3 h-100">
+                        <h2 class="h5">Libros</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Libros" asp-action="Index" class="btn btn-outline-primary">Ver libros</a>
+                            <a asp-controller="Autores" asp-action="Index" class="btn btn-outline-primary">Ver autores</a>
+                            <a asp-controller="Categorias" asp-action="Index" class="btn btn-outline-primary">Ver categorias</a>
+                            <a asp-controller="Editoriales" asp-action="Index" class="btn btn-outline-primary">Ver editoriales</a>
+                        </div>
+                    </section>
+                </div>
+            </div>
         }
     }
     else

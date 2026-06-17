@@ -9,6 +9,8 @@
 <dl class="row">
     <dt class="col-sm-3">Fecha</dt>
     <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
+    <dt class="col-sm-3">ID de prestamo</dt>
+    <dd class="col-sm-9">@(Model.IdPrestamo?.ToString() ?? "Sin prestamo asociado")</dd>
     <dt class="col-sm-3">ID de libro</dt>
     <dd class="col-sm-9">@Model.Libro.IdLibro</dd>
     <dt class="col-sm-3">ISBN</dt>

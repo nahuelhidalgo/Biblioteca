@@ -6,7 +6,7 @@
 
 <h1>Crear libro</h1>
 
-<form asp-action="Create">
+<form asp-action="Create" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="mb-3">
         <label asp-for="ISBN" class="form-label"></label>
@@ -20,25 +20,37 @@
     </div>
     <div class="mb-3">
         <label asp-for="IdAutor" class="form-label">Autor</label>
-        <div class="input-group">
-            <select asp-for="IdAutor" class="form-select" asp-items="ViewBag.IdAutor"></select>
-            <a asp-controller="Autores" asp-action="Create" class="btn btn-outline-primary">Crear Autor</a>
+        <div class="row g-2">
+            <div class="col-md-9">
+                <select asp-for="IdAutor" class="form-select" asp-items="ViewBag.IdAutor"></select>
+            </div>
+            <div class="col-md-3">
+                <a asp-controller="Autores" asp-action="Create" asp-route-returnUrl="@Url.Action("Create", "Libros")" class="btn btn-outline-primary w-100">Crear Autor</a>
+            </div>
         </div>
         <span asp-validation-for="IdAutor" class="text-danger"></span>
     </div>
     <div class="mb-3">
         <label asp-for="IdCategoria" class="form-label">Categoría</label>
-        <div class="input-group">
-            <select asp-for="IdCategoria" class="form-select" asp-items="ViewBag.IdCategoria"></select>
-            <a asp-controller="Categorias" asp-action="Create" class="btn btn-outline-primary">Crear Categoría</a>
+        <div class="row g-2">
+            <div class="col-md-9">
+                <select asp-for="IdCategoria" class="form-select" asp-items="ViewBag.IdCategoria"></select>
+            </div>
+            <div class="col-md-3">
+                <a asp-controller="Categorias" asp-action="Create" asp-route-returnUrl="@Url.Action("Create", "Libros")" class="btn btn-outline-primary w-100">Crear Categoría</a>
+            </div>
         </div>
         <span asp-validation-for="IdCategoria" class="text-danger"></span>
     </div>
     <div class="mb-3">
         <label asp-for="IdEditorial" class="form-label">Editorial</label>
-        <div class="input-group">
-            <select asp-for="IdEditorial" class="form-select" asp-items="ViewBag.IdEditorial"></select>
-            <a asp-controller="Editoriales" asp-action="Create" class="btn btn-outline-primary">Crear Editorial</a>
+        <div class="row g-2">
+            <div class="col-md-9">
+                <select asp-for="IdEditorial" class="form-select" asp-items="ViewBag.IdEditorial"></select>
+            </div>
+            <div class="col-md-3">
+                <a asp-controller="Editoriales" asp-action="Create" asp-route-returnUrl="@Url.Action("Create", "Libros")" class="btn btn-outline-primary w-100">Crear Editorial</a>
+            </div>
         </div>
         <span asp-validation-for="IdEditorial" class="text-danger"></span>
     </div>

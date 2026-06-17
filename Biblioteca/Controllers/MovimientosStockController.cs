@@ -3,6 +3,7 @@ using Biblioteca.Filtros;
 using Biblioteca.Modelos;
 using Biblioteca.Seguridad;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteca.Controllers;
@@ -17,12 +18,62 @@ public class MovimientosStockController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(
+        int? legajoEmpleado,
+        DateTime? fechaCreacion,
+        int? idLibro,
+        TipoMovimientoStock? tipoMovimiento,
+        string? orden,
+        string? direccion)
     {
-        var movimientos = await _context.MovimientosStock
+        var movimientosQuery = _context.MovimientosStock
             .Include(m => m.Libro)
             .Include(m => m.Empleado)
-            .OrderByDescending(m => m.Fecha)
+            .AsQueryable();
+
+        if (legajoEmpleado.HasValue)
+        {
+            movimientosQuery = movimientosQuery.Where(m => m.LegajoEmpleado == legajoEmpleado.Value);
+        }
+
+        if (fechaCreacion.HasValue)
+        {
+            var desde = fechaCreacion.Value.Date;
+            var hasta = desde.AddDays(1);
+            movimientosQuery = movimientosQuery.Where(m => m.Fecha >= desde && m.Fecha < hasta);
+        }
+
+        if (idLibro.HasValue)
+        {
+            movimientosQuery = movimientosQuery.Where(m => m.IdLibro == idLibro.Value);
+        }
+
+        if (tipoMovimiento.HasValue)
+        {
+            movimientosQuery = movimientosQuery.Where(m => m.TipoMovimiento == tipoMovimiento.Value);
+        }
+
+        var criterioOrden = string.Equals(orden, "cantidad", StringComparison.OrdinalIgnoreCase)
+            ? "cantidad"
+            : "fecha";
+        var ascendente = string.Equals(direccion, "asc", StringComparison.OrdinalIgnoreCase);
+
+        movimientosQuery = criterioOrden == "cantidad"
+            ? ascendente
+                ? movimientosQuery.OrderBy(m => m.Cantidad).ThenByDescending(m => m.Fecha)
+                : movimientosQuery.OrderByDescending(m => m.Cantidad).ThenByDescending(m => m.Fecha)
+            : ascendente
+                ? movimientosQuery.OrderBy(m => m.Fecha).ThenBy(m => m.IdMovimientoStock)
+                : movimientosQuery.OrderByDescending(m => m.Fecha).ThenByDescending(m => m.IdMovimientoStock);
+
+        await CargarFiltrosAsync(legajoEmpleado, idLibro);
+
+        ViewBag.FechaCreacionFiltro = fechaCreacion?.ToString("yyyy-MM-dd");
+        ViewBag.TipoMovimientoFiltro = tipoMovimiento?.ToString();
+        ViewBag.Orden = criterioOrden;
+        ViewBag.Direccion = ascendente ? "asc" : "desc";
+
+        var movimientos = await movimientosQuery
             .AsNoTracking()
             .ToListAsync();
 
@@ -60,5 +111,32 @@ public class MovimientosStockController : Controller
     public IActionResult Create([Bind("IdLibro,TipoMovimiento,Cantidad,Motivo")] MovimientoStock movimiento)
     {
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task CargarFiltrosAsync(int? legajoEmpleado, int? idLibro)
+    {
+        var empleados = await _context.Empleados
+            .OrderBy(e => e.Nombre)
+            .ThenBy(e => e.Apellido)
+            .Select(e => new
+            {
+                e.Legajo,
+                NombreCompleto = $"{e.Nombre} {e.Apellido}"
+            })
+            .ToListAsync();
+
+        var libros = await _context.Libros
+            .OrderBy(l => l.Titulo)
+            .Select(l => new
+            {
+                l.IdLibro,
+                Descripcion = $"{l.Titulo} ({l.ISBN})"
+            })
+            .ToListAsync();
+
+        ViewBag.Empleados = new SelectList(empleados, "Legajo", "NombreCompleto", legajoEmpleado);
+        ViewBag.Libros = new SelectList(libros, "IdLibro", "Descripcion", idLibro);
+        ViewBag.LegajoEmpleadoFiltro = legajoEmpleado;
+        ViewBag.IdLibroFiltro = idLibro;
     }
 }

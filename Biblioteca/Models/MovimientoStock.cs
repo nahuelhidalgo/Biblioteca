@@ -10,6 +10,8 @@ public class MovimientoStock
 
     public Libro Libro { get; set; } = null!;
 
+    public int? IdPrestamo { get; set; }
+
     public int? LegajoEmpleado { get; set; }
 
     public Empleado? Empleado { get; set; }

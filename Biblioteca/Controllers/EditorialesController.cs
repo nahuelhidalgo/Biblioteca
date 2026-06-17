@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biblioteca.Controllers;
 
-[SesionAuthorize(RolesSistema.Administrador)]
+[SesionAuthorize]
 public class EditorialesController : Controller
 {
     private readonly BibliotecaContext _context;
@@ -37,25 +37,34 @@ public class EditorialesController : Controller
         return editorial is null ? NotFound() : View(editorial);
     }
 
-    public IActionResult Create()
+    [SesionAuthorize(RolesSistema.Administrador)]
+    public IActionResult Create(string? returnUrl = null)
     {
-        return View();
+        ViewBag.ReturnUrl = ObtenerReturnUrlLocal(returnUrl);
+        return View(new Editorial { Activo = true });
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("IdEditorial,Nombre,Descripcion,Activo")] Editorial editorial)
+    public async Task<IActionResult> Create([Bind("IdEditorial,Nombre,Descripcion,Activo")] Editorial editorial, string? returnUrl = null)
     {
+        var returnUrlLocal = ObtenerReturnUrlLocal(returnUrl);
+
         if (!ModelState.IsValid)
         {
+            ViewBag.ReturnUrl = returnUrlLocal;
             return View(editorial);
         }
 
         _context.Add(editorial);
         await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        return !string.IsNullOrWhiteSpace(returnUrlLocal)
+            ? LocalRedirect(returnUrlLocal)
+            : RedirectToAction(nameof(Index));
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id is null)
@@ -67,6 +76,7 @@ public class EditorialesController : Controller
         return editorial is null ? NotFound() : View(editorial);
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("IdEditorial,Nombre,Descripcion,Activo")] Editorial editorial)
@@ -86,6 +96,7 @@ public class EditorialesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id is null)
@@ -97,6 +108,7 @@ public class EditorialesController : Controller
         return editorial is null ? NotFound() : View(editorial);
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
@@ -110,5 +122,12 @@ public class EditorialesController : Controller
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private string? ObtenerReturnUrlLocal(string? returnUrl)
+    {
+        return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? returnUrl
+            : null;
     }
 }

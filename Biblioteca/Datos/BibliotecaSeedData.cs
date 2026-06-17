@@ -18,6 +18,7 @@ public static class BibliotecaSeedData
 
         await CrearStockInicialAsync(context, libros);
         await CrearPrestamosAsync(context, empleados, libros);
+        await VincularMovimientosConPrestamosAsync(context);
     }
 
     private static async Task<Dictionary<string, Empleado>> CrearEmpleadosYUsuariosAsync(BibliotecaContext context)
@@ -372,10 +373,17 @@ public static class BibliotecaSeedData
         {
             var cantidad = cantidadesPorLibro[libro.IdLibro];
             libro.StockDisponible -= cantidad;
+        }
 
+        await context.SaveChangesAsync();
+
+        foreach (var libro in libros)
+        {
+            var cantidad = cantidadesPorLibro[libro.IdLibro];
             context.MovimientosStock.Add(new MovimientoStock
             {
                 IdLibro = libro.IdLibro,
+                IdPrestamo = prestamo.IdPrestamo,
                 LegajoEmpleado = legajoEmpleado,
                 TipoMovimiento = TipoMovimientoStock.Prestado,
                 Cantidad = cantidad,
@@ -411,12 +419,60 @@ public static class BibliotecaSeedData
         context.MovimientosStock.Add(new MovimientoStock
         {
             IdLibro = item.IdLibro,
+            IdPrestamo = item.Prestamo.IdPrestamo,
             LegajoEmpleado = item.Prestamo.LegajoEmpleado,
             TipoMovimiento = TipoMovimientoStock.AltaStock,
             Cantidad = 1,
             Motivo = "Devolucion de prestamo",
             Fecha = fechaDevolucion
         });
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task VincularMovimientosConPrestamosAsync(BibliotecaContext context)
+    {
+        var movimientos = await context.MovimientosStock
+            .Where(m => m.IdPrestamo == null
+                && m.LegajoEmpleado != null
+                && (m.Motivo == "Prestamo registrado" || m.Motivo == "Devolucion de prestamo"))
+            .OrderBy(m => m.Fecha)
+            .ToListAsync();
+
+        if (movimientos.Count == 0)
+        {
+            return;
+        }
+
+        var prestamos = await context.Prestamos
+            .Include(p => p.ItemsPrestamo)
+            .ToListAsync();
+
+        foreach (var movimiento in movimientos)
+        {
+            var candidatos = prestamos
+                .Where(p => p.LegajoEmpleado == movimiento.LegajoEmpleado
+                    && p.ItemsPrestamo.Any(i => i.IdLibro == movimiento.IdLibro))
+                .ToList();
+
+            if (movimiento.Motivo == "Prestamo registrado")
+            {
+                candidatos = candidatos
+                    .Where(p => p.ItemsPrestamo.Count(i => i.IdLibro == movimiento.IdLibro) == movimiento.Cantidad)
+                    .OrderBy(p => Math.Abs((p.Fecha - movimiento.Fecha).TotalMinutes))
+                    .ToList();
+            }
+            else
+            {
+                candidatos = candidatos
+                    .Where(p => p.ItemsPrestamo.Any(i =>
+                        i.IdLibro == movimiento.IdLibro && i.FechaDevolucion != null))
+                    .OrderBy(p => Math.Abs(((p.FechaDevolucion ?? p.Fecha) - movimiento.Fecha).TotalMinutes))
+                    .ToList();
+            }
+
+            movimiento.IdPrestamo = candidatos.FirstOrDefault()?.IdPrestamo;
+        }
 
         await context.SaveChangesAsync();
     }

@@ -53,13 +53,31 @@ public class EmpleadosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("Legajo,Nombre,Apellido,DNI,Telefono,Direccion")] Empleado empleado)
     {
+        var cuenta = CuentasEmpleado.CrearEmail(empleado);
+        var passwordInicial = CuentasEmpleado.CrearPasswordInicial(empleado);
+
+        if (await _context.Usuarios.AnyAsync(u => u.Email == cuenta))
+        {
+            ModelState.AddModelError(string.Empty, $"Ya existe un usuario con la cuenta {cuenta}.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(empleado);
         }
 
-        _context.Add(empleado);
+        empleado.Usuario = new Usuario
+        {
+            Email = cuenta,
+            Password = passwordInicial,
+            Rol = RolesSistema.Operador,
+            Activo = true
+        };
+
+        _context.Empleados.Add(empleado);
         await _context.SaveChangesAsync();
+
+        TempData["Mensaje"] = $"Empleado creado con usuario {cuenta} y contraseña inicial {passwordInicial}.";
         return RedirectToAction(nameof(Index));
     }
 

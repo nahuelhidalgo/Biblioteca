@@ -13,11 +13,17 @@
     <dt class="col-sm-3">Titulo</dt>
     <dd class="col-sm-9">@Model.Titulo</dd>
     <dt class="col-sm-3">Autor</dt>
-    <dd class="col-sm-9">@Model.Autor.Apellido, @Model.Autor.Nombre</dd>
+    <dd class="col-sm-9">
+        <a asp-controller="Autores" asp-action="Details" asp-route-id="@Model.IdAutor">@Model.Autor.Apellido, @Model.Autor.Nombre</a>
+    </dd>
     <dt class="col-sm-3">Categoria</dt>
-    <dd class="col-sm-9">@Model.Categoria.Nombre</dd>
+    <dd class="col-sm-9">
+        <a asp-controller="Categorias" asp-action="Details" asp-route-id="@Model.IdCategoria">@Model.Categoria.Nombre</a>
+    </dd>
     <dt class="col-sm-3">Editorial</dt>
-    <dd class="col-sm-9">@Model.Editorial.Nombre</dd>
+    <dd class="col-sm-9">
+        <a asp-controller="Editoriales" asp-action="Details" asp-route-id="@Model.IdEditorial">@Model.Editorial.Nombre</a>
+    </dd>
     <dt class="col-sm-3">Año</dt>
     <dd class="col-sm-9">@Model.AnioPublicacion</dd>
     <dt class="col-sm-3">Stock</dt>
@@ -33,6 +39,7 @@
         <thead>
             <tr>
                 <th>Fecha</th>
+                <th>ID prestamo</th>
                 <th>Tipo</th>
                 <th>Cantidad</th>
                 <th>Motivo</th>
@@ -43,6 +50,7 @@
 {
             <tr>
                 <td>@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@(movimiento.IdPrestamo?.ToString() ?? "-")</td>
                 <td>@movimiento.TipoMovimiento</td>
                 <td>@movimiento.Cantidad</td>
                 <td>@movimiento.Motivo</td>

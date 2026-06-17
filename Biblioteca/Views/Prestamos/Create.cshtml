@@ -6,28 +6,78 @@
 
 <h1>Nuevo prestamo</h1>
 
-<form asp-action="Create">
+<form asp-action="Create" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="mb-3">
-        <label class="form-label">Empleado</label>
-        <input value="@ViewBag.EmpleadoLogueado" class="form-control" readonly />
+
+    @for (var i = 0; i < Model.Items.Count; i++)
+    {
+        <input type="hidden" asp-for="Items[i].IdLibro" />
+        <input type="hidden" asp-for="Items[i].ISBN" />
+        <input type="hidden" asp-for="Items[i].Titulo" />
+        <input type="hidden" asp-for="Items[i].StockDisponible" />
+        <input type="hidden" asp-for="Items[i].Cantidad" />
+    }
+
+    <div class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+            <label asp-for="ISBN" class="form-label"></label>
+            <input asp-for="ISBN" class="form-control" placeholder="Ingrese el ISBN" />
+            <span asp-validation-for="ISBN" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Cantidad" class="form-label"></label>
+            <input asp-for="Cantidad" type="number" min="1" class="form-control" />
+            <span asp-validation-for="Cantidad" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" name="Accion" value="agregar" class="btn btn-outline-primary w-100">Agregar al prestamo</button>
+        </div>
     </div>
+
     <div class="mb-3">
-        <label asp-for="LibrosIds" class="form-label"></label>
-        <select asp-for="LibrosIds" class="form-select" asp-items="ViewBag.Libros" multiple size="6"></select>
-        <span asp-validation-for="LibrosIds" class="text-danger"></span>
+        <h2 class="h5">Carrito de prestamo</h2>
+        @if (Model.Items.Count == 0)
+        {
+            <p class="text-muted">Todavia no agregaste libros.</p>
+        }
+        else
+        {
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>ISBN</th>
+                        <th>Libro</th>
+                        <th>Disponible</th>
+                        <th>Cantidad</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+@foreach (var item in Model.Items)
+{
+                    <tr>
+                        <td>@item.ISBN</td>
+                        <td>@item.Titulo</td>
+                        <td>@item.StockDisponible</td>
+                        <td>@item.Cantidad</td>
+                        <td class="text-end">
+                            <button type="submit" name="Accion" value="quitar:@item.IdLibro" class="btn btn-link p-0">Quitar</button>
+                        </td>
+                    </tr>
+}
+                </tbody>
+            </table>
+        }
+        <span asp-validation-for="Items" class="text-danger"></span>
     </div>
-    <div class="mb-3">
-        <label asp-for="FechaPrestamo" class="form-label"></label>
-        <input asp-for="FechaPrestamo" type="datetime-local" class="form-control" />
-        <span asp-validation-for="FechaPrestamo" class="text-danger"></span>
-    </div>
+
     <div class="mb-3">
         <label asp-for="FechaEstimadaDevolucion" class="form-label"></label>
         <input asp-for="FechaEstimadaDevolucion" type="datetime-local" class="form-control" />
         <span asp-validation-for="FechaEstimadaDevolucion" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Guardar prestamo</button>
+
+    <button type="submit" name="Accion" value="guardar" class="btn btn-primary">Guardar prestamo</button>
     <a asp-action="Index" class="btn btn-secondary">Volver</a>
 </form>
 

@@ -7,6 +7,7 @@
     var mostrandoVencidos = string.Equals(vista, "vencidos", StringComparison.OrdinalIgnoreCase);
     var ordenandoPorFecha = string.Equals(orden, "fecha", StringComparison.OrdinalIgnoreCase);
     var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
+    var siguienteVistaVencidos = mostrandoVencidos ? null : "vencidos";
 }
 
 <h1>Prestamos</h1>
@@ -15,16 +16,13 @@
     <a asp-action="Create" class="btn btn-primary">Nuevo prestamo</a>
     <a asp-action="Devolver" class="btn btn-outline-primary">Registrar devolucion</a>
     <a asp-action="Index"
-       asp-route-vista="vencidos"
+       asp-route-vista="@siguienteVistaVencidos"
        asp-route-orden="@orden"
        class="btn @(mostrandoVencidos ? "btn-warning" : "btn-outline-warning")">Prestamos vencidos</a>
     <a asp-action="Index"
-       asp-route-vista="@vista"
        asp-route-orden="fecha"
        class="btn @(ordenandoPorFecha ? "btn-secondary" : "btn-outline-secondary")">Ordenar por fecha de creación</a>
-    <a asp-action="Index"
-       asp-route-vista="@vista"
-       class="btn btn-outline-dark">Ordenar por ID</a>
+    <a asp-action="Index" class="btn btn-outline-dark">Ordenar por ID</a>
 </p>
 
 <table class="table table-striped">

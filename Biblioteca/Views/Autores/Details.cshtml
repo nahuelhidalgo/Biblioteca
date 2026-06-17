@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Detalle de autor";
+    var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Detalle de autor</h1>
@@ -19,5 +20,8 @@
     <dd class="col-sm-9">@Model.Libros.Count</dd>
 </dl>
 
-<a asp-action="Edit" asp-route-id="@Model.IdAutor" class="btn btn-primary">Editar</a>
+@if (esAdministrador)
+{
+    <a asp-action="Edit" asp-route-id="@Model.IdAutor" class="btn btn-primary">Editar</a>
+}
 <a asp-action="Index" class="btn btn-secondary">Volver</a>

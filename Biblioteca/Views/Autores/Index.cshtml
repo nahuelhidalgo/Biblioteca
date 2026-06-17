@@ -2,13 +2,17 @@
 
 @{
     ViewData["Title"] = "Autores";
+    var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
 <h1>Autores</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Crear autor</a>
-</p>
+@if (esAdministrador)
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Crear autor</a>
+    </p>
+}
 
 <table class="table table-striped">
     <thead>
@@ -29,9 +33,12 @@
             <td>@item.Nacionalidad</td>
             <td>@(item.Activo ? "Si" : "No")</td>
             <td class="text-end">
-                <a asp-action="Edit" asp-route-id="@item.IdAutor">Editar</a> |
-                <a asp-action="Details" asp-route-id="@item.IdAutor">Detalle</a> |
-                <a asp-action="Delete" asp-route-id="@item.IdAutor">Baja</a>
+                @if (esAdministrador)
+                {
+                    <a asp-action="Edit" asp-route-id="@item.IdAutor">Editar</a>
+                    <span>|</span>
+                    <a asp-action="Delete" asp-route-id="@item.IdAutor">Baja</a>
+                }
             </td>
         </tr>
 }

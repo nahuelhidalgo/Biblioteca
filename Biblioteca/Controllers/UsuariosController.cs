@@ -5,8 +5,6 @@ using Biblioteca.Seguridad;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
-using System.Text;
 
 namespace Biblioteca.Controllers;
 
@@ -48,14 +46,14 @@ public class UsuariosController : Controller
     public async Task<IActionResult> Create()
     {
         await CargarEmpleadosDisponiblesAsync();
-        return View();
+        return View(new Usuario { Activo = true, Rol = RolesSistema.Operador });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("IdUsuarioSistema,Email,Password,Rol,Activo,UltimoAcceso,LegajoEmpleado")] Usuario usuario)
     {
-        usuario.Email = usuario.Email.Trim().ToLowerInvariant();
+        usuario.Email = (usuario.Email ?? string.Empty).Trim().ToLowerInvariant();
         var empleado = await _context.Empleados
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Legajo == usuario.LegajoEmpleado);
@@ -72,6 +70,11 @@ public class UsuariosController : Controller
         if (await _context.Usuarios.AnyAsync(u => u.LegajoEmpleado == usuario.LegajoEmpleado))
         {
             ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "El empleado seleccionado ya tiene un usuario asociado.");
+        }
+
+        if (await _context.Usuarios.AnyAsync(u => u.Email == usuario.Email))
+        {
+            ModelState.AddModelError(nameof(Usuario.Email), "Ya existe un usuario con esa cuenta.");
         }
 
         if (!ModelState.IsValid)
@@ -112,7 +115,7 @@ public class UsuariosController : Controller
             return NotFound();
         }
 
-        usuario.Email = usuario.Email.Trim().ToLowerInvariant();
+        usuario.Email = (usuario.Email ?? string.Empty).Trim().ToLowerInvariant();
         var empleado = await _context.Empleados
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Legajo == usuario.LegajoEmpleado);
@@ -130,6 +133,12 @@ public class UsuariosController : Controller
             u.IdUsuarioSistema != usuario.IdUsuarioSistema && u.LegajoEmpleado == usuario.LegajoEmpleado))
         {
             ModelState.AddModelError(nameof(Usuario.LegajoEmpleado), "El empleado seleccionado ya tiene un usuario asociado.");
+        }
+
+        if (await _context.Usuarios.AnyAsync(u =>
+            u.IdUsuarioSistema != usuario.IdUsuarioSistema && u.Email == usuario.Email))
+        {
+            ModelState.AddModelError(nameof(Usuario.Email), "Ya existe un usuario con esa cuenta.");
         }
 
         if (!ModelState.IsValid)
@@ -177,6 +186,7 @@ public class UsuariosController : Controller
     {
         var empleados = await _context.Empleados
             .Where(e => e.Usuario == null
+                || (seleccionado != null && e.Legajo == seleccionado)
                 || (usuarioActualId != null && e.Usuario.IdUsuarioSistema == usuarioActualId))
             .OrderBy(e => e.Nombre)
             .ThenBy(e => e.Apellido)
@@ -192,7 +202,7 @@ public class UsuariosController : Controller
 
     private void ValidarCuentaEmpleado(Usuario usuario, Empleado empleado)
     {
-        var cuentaEsperada = CrearCuentaEsperada(empleado);
+        var cuentaEsperada = CuentasEmpleado.CrearEmail(empleado);
 
         if (!string.Equals(usuario.Email, cuentaEsperada, StringComparison.OrdinalIgnoreCase))
         {
@@ -200,47 +210,5 @@ public class UsuariosController : Controller
                 nameof(Usuario.Email),
                 $"La cuenta debe ser {cuentaEsperada} para el empleado seleccionado.");
         }
-    }
-
-    private static string CrearCuentaEsperada(Empleado empleado)
-    {
-        var partesNombre = NormalizarParteCuenta(empleado.Nombre)
-            .Split('.', StringSplitOptions.RemoveEmptyEntries);
-        var apellido = NormalizarParteCuenta(empleado.Apellido);
-        var usuario = string.Join(".", partesNombre.Append(apellido));
-
-        return $"{usuario}@ort.edu.ar";
-    }
-
-    private static string NormalizarParteCuenta(string texto)
-    {
-        var normalizado = texto.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
-        var builder = new StringBuilder();
-        var agregarPunto = false;
-
-        foreach (var caracter in normalizado)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(caracter) == UnicodeCategory.NonSpacingMark)
-            {
-                continue;
-            }
-
-            if (char.IsLetterOrDigit(caracter))
-            {
-                if (agregarPunto && builder.Length > 0)
-                {
-                    builder.Append('.');
-                }
-
-                builder.Append(caracter);
-                agregarPunto = false;
-            }
-            else if (char.IsWhiteSpace(caracter) || caracter == '.' || caracter == '-' || caracter == '_')
-            {
-                agregarPunto = builder.Length > 0;
-            }
-        }
-
-        return builder.ToString();
     }
 }
