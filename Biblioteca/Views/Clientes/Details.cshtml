@@ -1,0 +1,39 @@
+@model Cliente
+
+@{
+    ViewData["Title"] = "Detalle de cliente";
+    var rol = Context.Session.GetString(SesionKeys.Rol);
+    var esAdministrador = string.Equals(rol, RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
+}
+
+<h1>Detalle de cliente</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">ID</dt>
+    <dd class="col-sm-9">@Model.IdPersona</dd>
+    <dt class="col-sm-3">Nombre</dt>
+    <dd class="col-sm-9">@Model.NombreCompleto</dd>
+    <dt class="col-sm-3">DNI</dt>
+    <dd class="col-sm-9">@Model.DNI</dd>
+    <dt class="col-sm-3">Telefono</dt>
+    <dd class="col-sm-9">@Model.Telefono</dd>
+    <dt class="col-sm-3">Direccion</dt>
+    <dd class="col-sm-9">@Model.Direccion</dd>
+    @if (esAdministrador)
+    {
+        <dt class="col-sm-3">Estado</dt>
+        <dd class="col-sm-9">@(Model.Activo ? "Activo" : "Inactivo")</dd>
+    }
+    <dt class="col-sm-3">Prestamos registrados</dt>
+    <dd class="col-sm-9">@Model.Prestamos.Count</dd>
+</dl>
+
+@if (esAdministrador)
+{
+    <a asp-action="Edit" asp-route-id="@Model.IdPersona" class="btn btn-primary">Editar</a>
+}
+@if (Model.Prestamos.Count > 0)
+{
+    <a asp-controller="Prestamos" asp-action="Index" asp-route-idCliente="@Model.IdPersona" class="btn btn-outline-secondary">Ver prestamos</a>
+}
+<a asp-action="Index" class="btn btn-secondary">Volver</a>

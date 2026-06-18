@@ -12,8 +12,10 @@
 <dl class="row">
     <dt class="col-sm-3">Nro.</dt>
     <dd class="col-sm-9">@Model.IdPrestamo</dd>
-    <dt class="col-sm-3">Empleado</dt>
-    <dd class="col-sm-9">@Model.Empleado.NombreCompleto</dd>
+    <dt class="col-sm-3">Cliente</dt>
+    <dd class="col-sm-9">@Model.Cliente.NombreCompleto</dd>
+    <dt class="col-sm-3">Registrado por</dt>
+    <dd class="col-sm-9">@Model.EmpleadoRegistro.NombreCompleto</dd>
     <dt class="col-sm-3">Fecha de creación</dt>
     <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Fecha de devolución</dt>
@@ -26,28 +28,17 @@
 
 @if (estaVencido)
 {
-    <div class="alert alert-warning">
-        Este prestamo esta vencido. La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").
-    </div>
+    <div class="alert alert-warning">Este prestamo esta vencido. La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").</div>
 }
 
 @if (tienePendientes)
 {
-    <p>
-        <a asp-action="Devolver" asp-route-id="@Model.IdPrestamo" class="btn btn-primary">Registrar devolucion</a>
-    </p>
+    <p><a asp-action="Devolver" asp-route-id="@Model.IdPrestamo" class="btn btn-primary">Registrar devolucion</a></p>
 }
 
 <h2>Libros</h2>
 <table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Libro</th>
-            <th>Estado</th>
-            <th>Devuelto el</th>
-            <th>Dias retraso</th>
-        </tr>
-    </thead>
+    <thead><tr><th>Libro</th><th>Estado</th><th>Devuelto el</th><th>Dias retraso</th></tr></thead>
     <tbody>
 @foreach (var item in Model.ItemsPrestamo)
 {

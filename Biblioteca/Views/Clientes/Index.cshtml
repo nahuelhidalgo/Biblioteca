@@ -1,0 +1,68 @@
+@model IEnumerable<Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+    var rol = Context.Session.GetString(SesionKeys.Rol);
+    var esAdministrador = string.Equals(rol, RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
+}
+
+<h1>Clientes</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear cliente</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>DNI</th>
+            <th>Telefono</th>
+            @if (esAdministrador)
+            {
+                <th>Estado</th>
+            }
+            <th>Prestamos</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@item.IdPersona</td>
+            <td>@item.NombreCompleto</td>
+            <td>@item.DNI</td>
+            <td>@item.Telefono</td>
+            @if (esAdministrador)
+            {
+                <td>
+                    <span class="badge @(item.Activo ? "text-bg-success" : "text-bg-secondary")">
+                        @(item.Activo ? "Activo" : "Inactivo")
+                    </span>
+                </td>
+            }
+            <td>@item.Prestamos.Count</td>
+            <td class="text-end">
+                <div class="table-actions">
+                    <a asp-action="Details" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-secondary">Detalle</a>
+                    @if (esAdministrador)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-primary">Editar</a>
+                        @if (item.Activo)
+                        {
+                            <a asp-action="Delete" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-danger">Dar de baja</a>
+                        }
+                    }
+                </div>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

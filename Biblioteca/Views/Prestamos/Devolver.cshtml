@@ -13,9 +13,7 @@
         <input id="IdPrestamo" name="id" type="number" class="form-control" value="@(Model.IdPrestamo > 0 ? Model.IdPrestamo.ToString() : string.Empty)" />
         <span asp-validation-for="IdPrestamo" class="text-danger"></span>
     </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-primary">Buscar prestamo</button>
-    </div>
+    <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Buscar prestamo</button></div>
 </form>
 
 @if (prestamoCargado)
@@ -23,7 +21,8 @@
     <form asp-action="Devolver" method="post">
         <input type="hidden" asp-for="IdPrestamo" />
         <input type="hidden" asp-for="Prestamo" />
-        <input type="hidden" asp-for="Empleado" />
+        <input type="hidden" asp-for="Cliente" />
+        <input type="hidden" asp-for="EmpleadoRegistro" />
         <input type="hidden" asp-for="Libros" />
         <input type="hidden" asp-for="FechaPrestamo" />
         <input type="hidden" asp-for="FechaEstimadaDevolucion" />
@@ -36,23 +35,21 @@
 
         @if (Model.EstaVencido)
         {
-            <div class="alert alert-warning">
-                Este prestamo esta vencido hace @Model.DiasVencido dia(s). La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").
-            </div>
+            <div class="alert alert-warning">Este prestamo esta vencido hace @Model.DiasVencido dia(s). La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").</div>
         }
 
         @if (Model.YaDevuelto)
         {
-            <div class="alert alert-info">
-                Este prestamo no tiene libros pendientes de devolución.
-            </div>
+            <div class="alert alert-info">Este prestamo no tiene libros pendientes de devolución.</div>
         }
 
         <dl class="row">
             <dt class="col-sm-3">Prestamo</dt>
             <dd class="col-sm-9">@Model.Prestamo</dd>
-            <dt class="col-sm-3">Empleado</dt>
-            <dd class="col-sm-9">@Model.Empleado</dd>
+            <dt class="col-sm-3">Cliente</dt>
+            <dd class="col-sm-9">@Model.Cliente</dd>
+            <dt class="col-sm-3">Registrado por</dt>
+            <dd class="col-sm-9">@Model.EmpleadoRegistro</dd>
             <dt class="col-sm-3">Libros pendientes</dt>
             <dd class="col-sm-9">@Model.Libros</dd>
             <dt class="col-sm-3">Fecha de creación</dt>

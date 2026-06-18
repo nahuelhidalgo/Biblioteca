@@ -7,15 +7,15 @@
 
 <h1>Dar de baja prestamo</h1>
 
-<div class="alert alert-warning">
-    Esta accion eliminara el prestamo y restituira el stock pendiente asociado.
-</div>
+<div class="alert alert-warning">Esta accion eliminara el prestamo y restituira el stock pendiente asociado.</div>
 
 <dl class="row">
     <dt class="col-sm-3">Nro.</dt>
     <dd class="col-sm-9">@Model.IdPrestamo</dd>
-    <dt class="col-sm-3">Empleado</dt>
-    <dd class="col-sm-9">@Model.Empleado.NombreCompleto</dd>
+    <dt class="col-sm-3">Cliente</dt>
+    <dd class="col-sm-9">@Model.Cliente.NombreCompleto</dd>
+    <dt class="col-sm-3">Registrado por</dt>
+    <dd class="col-sm-9">@Model.EmpleadoRegistro.NombreCompleto</dd>
     <dt class="col-sm-3">Fecha de creación</dt>
     <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
     <dt class="col-sm-3">Fecha de devolución</dt>
@@ -27,19 +27,11 @@
 @if (itemsPendientes.Count > 0)
 {
     <table class="table table-sm">
-        <thead>
-            <tr>
-                <th>ISBN</th>
-                <th>Libro</th>
-            </tr>
-        </thead>
+        <thead><tr><th>ISBN</th><th>Libro</th></tr></thead>
         <tbody>
 @foreach (var item in itemsPendientes)
 {
-            <tr>
-                <td>@item.Libro.ISBN</td>
-                <td>@item.Libro.Titulo</td>
-            </tr>
+            <tr><td>@item.Libro.ISBN</td><td>@item.Libro.Titulo</td></tr>
 }
         </tbody>
     </table>

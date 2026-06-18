@@ -35,9 +35,10 @@
             <td class="text-end">
                 @if (esAdministrador)
                 {
-                    <a asp-action="Edit" asp-route-id="@item.IdAutor">Editar</a>
-                    <span>|</span>
-                    <a asp-action="Delete" asp-route-id="@item.IdAutor">Baja</a>
+                    <div class="table-actions">
+                        <a asp-action="Edit" asp-route-id="@item.IdAutor" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@item.IdAutor" class="btn btn-sm btn-outline-danger">Baja</a>
+                    </div>
                 }
             </td>
         </tr>

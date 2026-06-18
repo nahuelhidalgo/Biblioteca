@@ -6,6 +6,11 @@
 
 <h1>Nuevo prestamo</h1>
 
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
 <form asp-action="Create" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -18,20 +23,46 @@
         <input type="hidden" asp-for="Items[i].Cantidad" />
     }
 
-    <div class="row g-2 align-items-end mb-3">
+    <div class="mb-3">
+        <label asp-for="IdCliente" class="form-label"></label>
+        <div class="row g-2">
+            <div class="col-md-9">
+                <select asp-for="IdCliente" asp-items="ViewBag.Clientes" class="form-select">
+                    <option value="">Seleccione un cliente</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <a asp-controller="Clientes"
+                   asp-action="Create"
+                   asp-route-returnUrl="@Url.Action("Create", "Prestamos")"
+                   class="btn btn-outline-primary w-100">Nuevo cliente</a>
+            </div>
+        </div>
+        <span asp-validation-for="IdCliente" class="text-danger"></span>
+    </div>
+
+    <div class="row g-2 align-items-end">
         <div class="col-md-6">
             <label asp-for="ISBN" class="form-label"></label>
-            <input asp-for="ISBN" class="form-control" placeholder="Ingrese el ISBN" />
-            <span asp-validation-for="ISBN" class="text-danger"></span>
+            <select asp-for="ISBN" asp-items="ViewBag.LibrosISBN" class="form-select">
+                <option value="">Seleccione un libro</option>
+            </select>
         </div>
         <div class="col-md-3">
             <label asp-for="Cantidad" class="form-label"></label>
             <input asp-for="Cantidad" type="number" min="1" class="form-control" />
-            <span asp-validation-for="Cantidad" class="text-danger"></span>
         </div>
         <div class="col-md-3">
-            <button type="submit" name="Accion" value="agregar" class="btn btn-outline-primary w-100">Agregar al prestamo</button>
+            <button type="submit"
+                    asp-action="AgregarAlCarrito"
+                    formnovalidate
+                    class="btn btn-outline-primary w-100 cancel">
+                Agregar al prestamo
+            </button>
         </div>
+    </div>
+    <div class="prestamo-validation-line mb-3">
+        @Html.ValidationMessage("AgregarLibro", null, new { @class = "text-danger" })
     </div>
 
     <div class="mb-3">
@@ -61,7 +92,13 @@
                         <td>@item.StockDisponible</td>
                         <td>@item.Cantidad</td>
                         <td class="text-end">
-                            <button type="submit" name="Accion" value="quitar:@item.IdLibro" class="btn btn-link p-0">Quitar</button>
+                            <button type="submit"
+                                    asp-action="QuitarDelCarrito"
+                                    asp-route-idLibro="@item.IdLibro"
+                                    formnovalidate
+                                    class="btn btn-link p-0 cancel">
+                                Quitar
+                            </button>
                         </td>
                     </tr>
 }
@@ -72,12 +109,15 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="FechaEstimadaDevolucion" class="form-label"></label>
-        <input asp-for="FechaEstimadaDevolucion" type="datetime-local" class="form-control" />
-        <span asp-validation-for="FechaEstimadaDevolucion" class="text-danger"></span>
+        <label asp-for="DuracionDias" class="form-label"></label>
+        <div class="input-group">
+            <input asp-for="DuracionDias" type="number" class="form-control" />
+            <span class="input-group-text">días</span>
+        </div>
+        <span asp-validation-for="DuracionDias" class="text-danger"></span>
     </div>
 
-    <button type="submit" name="Accion" value="guardar" class="btn btn-primary">Guardar prestamo</button>
+    <button type="submit" class="btn btn-primary">Guardar prestamo</button>
     <a asp-action="Index" class="btn btn-secondary">Volver</a>
 </form>
 

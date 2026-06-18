@@ -16,9 +16,13 @@ public class BibliotecaContext : DbContext
 
     public DbSet<Editorial> Editoriales => Set<Editorial>();
 
-    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Persona> Personas => Set<Persona>();
 
     public DbSet<Empleado> Empleados => Set<Empleado>();
+
+    public DbSet<Cliente> Clientes => Set<Cliente>();
+
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
 
     public DbSet<Libro> Libros => Set<Libro>();
 
@@ -50,6 +54,15 @@ public class BibliotecaContext : DbContext
             entity.HasIndex(e => e.Nombre).IsUnique();
         });
 
+        modelBuilder.Entity<Persona>(entity =>
+        {
+            entity.HasKey(e => e.IdPersona);
+            entity.HasIndex(e => e.DNI).IsUnique();
+            entity.HasDiscriminator<string>("TipoPersona")
+                .HasValue<Empleado>("Empleado")
+                .HasValue<Cliente>("Cliente");
+        });
+
         modelBuilder.Entity<Usuario>(entity =>
         {
             entity.HasKey(e => e.IdUsuarioSistema);
@@ -57,14 +70,8 @@ public class BibliotecaContext : DbContext
 
             entity.HasOne(e => e.Empleado)
                 .WithOne(e => e.Usuario)
-                .HasForeignKey<Usuario>(e => e.LegajoEmpleado)
+                .HasForeignKey<Usuario>(e => e.IdEmpleado)
                 .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<Empleado>(entity =>
-        {
-            entity.HasKey(e => e.Legajo);
-            entity.HasIndex(e => e.DNI).IsUnique();
         });
 
         modelBuilder.Entity<Libro>(entity =>
@@ -100,9 +107,14 @@ public class BibliotecaContext : DbContext
         {
             entity.HasKey(e => e.IdPrestamo);
 
-            entity.HasOne(e => e.Empleado)
+            entity.HasOne(e => e.EmpleadoRegistro)
+                .WithMany(e => e.PrestamosRegistrados)
+                .HasForeignKey(e => e.IdEmpleadoRegistro)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Cliente)
                 .WithMany(e => e.Prestamos)
-                .HasForeignKey(e => e.LegajoEmpleado)
+                .HasForeignKey(e => e.IdCliente)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -129,7 +141,6 @@ public class BibliotecaContext : DbContext
         modelBuilder.Entity<MovimientoStock>(entity =>
         {
             entity.HasKey(e => e.IdMovimientoStock);
-
             entity.HasIndex(e => e.IdPrestamo);
 
             entity.Property(e => e.TipoMovimiento)
@@ -144,7 +155,7 @@ public class BibliotecaContext : DbContext
 
             entity.HasOne(e => e.Empleado)
                 .WithMany(e => e.MovimientosStock)
-                .HasForeignKey(e => e.LegajoEmpleado)
+                .HasForeignKey(e => e.IdEmpleado)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.ToTable(t =>

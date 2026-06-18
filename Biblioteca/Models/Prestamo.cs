@@ -16,9 +16,13 @@ public class Prestamo
     [StringLength(30)]
     public string Estado { get; set; } = "Activo";
 
-    public int LegajoEmpleado { get; set; }
+    public int IdEmpleadoRegistro { get; set; }
 
-    public Empleado Empleado { get; set; } = null!;
+    public Empleado EmpleadoRegistro { get; set; } = null!;
+
+    public int IdCliente { get; set; }
+
+    public Cliente Cliente { get; set; } = null!;
 
     public ICollection<ItemPrestamo> ItemsPrestamo { get; set; } = new List<ItemPrestamo>();
 }

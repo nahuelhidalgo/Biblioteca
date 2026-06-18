@@ -6,7 +6,7 @@
     var direccion = ViewBag.Direccion as string ?? "desc";
     var proximaDireccionFecha = orden == "fecha" && direccion == "asc" ? "desc" : "asc";
     var proximaDireccionCantidad = orden == "cantidad" && direccion == "asc" ? "desc" : "asc";
-    var legajoEmpleadoFiltro = ViewBag.LegajoEmpleadoFiltro;
+    var idEmpleadoFiltro = ViewBag.IdEmpleadoFiltro;
     var fechaCreacionFiltro = ViewBag.FechaCreacionFiltro as string;
     var idLibroFiltro = ViewBag.IdLibroFiltro;
     var tipoMovimientoFiltro = ViewBag.TipoMovimientoFiltro as string;
@@ -16,8 +16,8 @@
 
 <form asp-action="Index" method="get" class="row g-2 mb-3">
     <div class="col-md-3">
-        <label class="form-label" for="legajoEmpleado">Creador del prestamo</label>
-        <select id="legajoEmpleado" name="legajoEmpleado" class="form-select" asp-items="ViewBag.Empleados">
+        <label class="form-label" for="idEmpleado">Empleado responsable</label>
+        <select id="idEmpleado" name="idEmpleado" class="form-select" asp-items="ViewBag.Empleados">
             <option value="">Todos</option>
         </select>
     </div>
@@ -61,7 +61,7 @@
         <tr>
             <th>
                 <a asp-action="Index"
-                   asp-route-legajoEmpleado="@legajoEmpleadoFiltro"
+                   asp-route-idEmpleado="@idEmpleadoFiltro"
                    asp-route-fechaCreacion="@fechaCreacionFiltro"
                    asp-route-idLibro="@idLibroFiltro"
                    asp-route-tipoMovimiento="@tipoMovimientoFiltro"
@@ -75,7 +75,7 @@
             <th>Libro</th>
             <th>
                 <a asp-action="Index"
-                   asp-route-legajoEmpleado="@legajoEmpleadoFiltro"
+                   asp-route-idEmpleado="@idEmpleadoFiltro"
                    asp-route-fechaCreacion="@fechaCreacionFiltro"
                    asp-route-idLibro="@idLibroFiltro"
                    asp-route-tipoMovimiento="@tipoMovimientoFiltro"
@@ -99,7 +99,9 @@
             <td>@item.Cantidad</td>
             <td>@item.Motivo</td>
             <td class="text-end">
-                <a asp-action="Details" asp-route-id="@item.IdMovimientoStock">Detalle</a>
+                <div class="table-actions">
+                    <a asp-action="Details" asp-route-id="@item.IdMovimientoStock" class="btn btn-sm btn-outline-secondary">Detalle</a>
+                </div>
             </td>
         </tr>
 }

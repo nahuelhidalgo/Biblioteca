@@ -7,8 +7,8 @@
 <h1>Detalle de empleado</h1>
 
 <dl class="row">
-    <dt class="col-sm-3">Legajo</dt>
-    <dd class="col-sm-9">@Model.Legajo</dd>
+    <dt class="col-sm-3">ID</dt>
+    <dd class="col-sm-9">@Model.IdPersona</dd>
     <dt class="col-sm-3">Nombre</dt>
     <dd class="col-sm-9">@Model.NombreCompleto</dd>
     <dt class="col-sm-3">DNI</dt>
@@ -20,10 +20,10 @@
     <dt class="col-sm-3">Usuario</dt>
     <dd class="col-sm-9">@Model.Usuario?.Email</dd>
     <dt class="col-sm-3">Prestamos registrados</dt>
-    <dd class="col-sm-9">@Model.Prestamos.Count</dd>
+    <dd class="col-sm-9">@Model.PrestamosRegistrados.Count</dd>
     <dt class="col-sm-3">Movimientos registrados</dt>
     <dd class="col-sm-9">@Model.MovimientosStock.Count</dd>
 </dl>
 
-<a asp-action="Edit" asp-route-id="@Model.Legajo" class="btn btn-primary">Editar</a>
+<a asp-action="Edit" asp-route-id="@Model.IdPersona" class="btn btn-primary">Editar</a>
 <a asp-action="Index" class="btn btn-secondary">Volver</a>

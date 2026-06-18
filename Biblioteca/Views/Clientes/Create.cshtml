@@ -1,13 +1,17 @@
-@model Empleado
+@model Cliente
 
 @{
-    ViewData["Title"] = "Editar empleado";
+    ViewData["Title"] = "Crear cliente";
+    var returnUrl = ViewBag.ReturnUrl as string;
 }
 
-<h1>Editar empleado</h1>
+<h1>Crear cliente</h1>
 
-<form asp-action="Edit">
-    <input type="hidden" asp-for="IdPersona" />
+<form asp-action="Create" method="post">
+    @if (!string.IsNullOrWhiteSpace(returnUrl))
+    {
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+    }
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="mb-3">
         <label asp-for="Nombre" class="form-label"></label>
@@ -35,7 +39,14 @@
         <span asp-validation-for="Direccion" class="text-danger"></span>
     </div>
     <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    @if (!string.IsNullOrWhiteSpace(returnUrl))
+    {
+        <a href="@returnUrl" class="btn btn-secondary">Volver</a>
+    }
+    else
+    {
+        <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    }
 </form>
 
 @section Scripts {

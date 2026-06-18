@@ -3,33 +3,64 @@
 @{
     ViewData["Title"] = "Prestamos";
     var vista = ViewBag.Vista as string;
-    var orden = ViewBag.Orden as string;
+    var orden = ViewBag.Orden as string ?? "fecha";
+    var idCliente = ViewBag.IdCliente as int?;
+    var mostrarFinalizados = ViewBag.MostrarFinalizados is true;
     var mostrandoVencidos = string.Equals(vista, "vencidos", StringComparison.OrdinalIgnoreCase);
     var ordenandoPorFecha = string.Equals(orden, "fecha", StringComparison.OrdinalIgnoreCase);
+    var ordenandoPorActivos = string.Equals(orden, "activos", StringComparison.OrdinalIgnoreCase);
+    var ordenandoPorId = string.Equals(orden, "id", StringComparison.OrdinalIgnoreCase);
     var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
     var siguienteVistaVencidos = mostrandoVencidos ? null : "vencidos";
 }
 
 <h1>Prestamos</h1>
 
+<form asp-action="Index" method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <input type="hidden" name="vista" value="@vista" />
+    <input type="hidden" name="orden" value="@orden" />
+    <input type="hidden" name="mostrarFinalizados" value="@mostrarFinalizados.ToString().ToLowerInvariant()" />
+    <label class="form-label mb-0" for="idCliente">Cliente:</label>
+    <select id="idCliente" name="idCliente" class="form-select w-auto" asp-items="ViewBag.Clientes">
+        <option value="">Todos los clientes</option>
+    </select>
+    <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+    @if (idCliente.HasValue)
+    {
+        <a asp-action="Index"
+           asp-route-vista="@vista"
+           asp-route-orden="@orden"
+           asp-route-mostrarFinalizados="@mostrarFinalizados"
+           class="btn btn-outline-secondary">Quitar filtro</a>
+    }
+</form>
+
 <p class="d-flex flex-wrap gap-2">
     <a asp-action="Create" class="btn btn-primary">Nuevo prestamo</a>
     <a asp-action="Devolver" class="btn btn-outline-primary">Registrar devolucion</a>
-    <a asp-action="Index"
-       asp-route-vista="@siguienteVistaVencidos"
-       asp-route-orden="@orden"
+    <a asp-action="Index" asp-route-vista="@siguienteVistaVencidos" asp-route-orden="@orden"
+       asp-route-idCliente="@idCliente" asp-route-mostrarFinalizados="@mostrarFinalizados"
        class="btn @(mostrandoVencidos ? "btn-warning" : "btn-outline-warning")">Prestamos vencidos</a>
-    <a asp-action="Index"
-       asp-route-orden="fecha"
+    <a asp-action="Index" asp-route-vista="@vista" asp-route-orden="fecha"
+       asp-route-idCliente="@idCliente" asp-route-mostrarFinalizados="@mostrarFinalizados"
        class="btn @(ordenandoPorFecha ? "btn-secondary" : "btn-outline-secondary")">Ordenar por fecha de creación</a>
-    <a asp-action="Index" class="btn btn-outline-dark">Ordenar por ID</a>
+    <a asp-action="Index" asp-route-vista="@vista" asp-route-orden="id"
+       asp-route-idCliente="@idCliente" asp-route-mostrarFinalizados="@mostrarFinalizados"
+       class="btn @(ordenandoPorId ? "btn-dark" : "btn-outline-dark")">Ordenar por ID</a>
+    <a asp-action="Index" asp-route-vista="@vista" asp-route-orden="activos"
+       asp-route-idCliente="@idCliente" asp-route-mostrarFinalizados="@mostrarFinalizados"
+       class="btn @(ordenandoPorActivos ? "btn-success" : "btn-outline-success")">Ordenar por Activos</a>
+    <a asp-action="Index" asp-route-vista="@vista" asp-route-orden="@orden"
+       asp-route-idCliente="@idCliente" asp-route-mostrarFinalizados="@(!mostrarFinalizados)"
+       class="btn @(mostrarFinalizados ? "btn-danger" : "btn-outline-danger")">@(mostrarFinalizados ? "Ocultar finalizados" : "Ver finalizados")</a>
 </p>
 
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Nro.</th>
-            <th>Empleado</th>
+            <th>Cliente</th>
+            <th>Registrado por</th>
             <th>Fecha de creación</th>
             <th>Fecha de devolución</th>
             <th>Estado</th>
@@ -43,7 +74,8 @@
     var estaVencido = item.FechaDevolucion is null && item.FechaEstimadaDevolucion < DateTime.Now;
         <tr>
             <td>@item.IdPrestamo</td>
-            <td>@item.Empleado.NombreCompleto</td>
+            <td>@item.Cliente.NombreCompleto</td>
+            <td>@item.EmpleadoRegistro.NombreCompleto</td>
             <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
             <td>@item.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm")</td>
             <td>
@@ -55,14 +87,14 @@
             </td>
             <td>@item.ItemsPrestamo.Count</td>
             <td class="text-end">
-                <a asp-action="Devolver" asp-route-id="@item.IdPrestamo">Registrar devolución</a>
-                <span>|</span>
-                <a asp-action="Details" asp-route-id="@item.IdPrestamo">Detalle</a>
-                @if (esAdministrador)
-                {
-                    <span>|</span>
-                    <a asp-action="Baja" asp-route-id="@item.IdPrestamo">Dar de baja</a>
-                }
+                <div class="table-actions">
+                    <a asp-action="Devolver" asp-route-id="@item.IdPrestamo" class="btn btn-sm btn-outline-success">Registrar devolución</a>
+                    <a asp-action="Details" asp-route-id="@item.IdPrestamo" class="btn btn-sm btn-outline-secondary">Detalle</a>
+                    @if (esAdministrador)
+                    {
+                        <a asp-action="Baja" asp-route-id="@item.IdPrestamo" class="btn btn-sm btn-outline-danger">Dar de baja</a>
+                    }
+                </div>
             </td>
         </tr>
 }

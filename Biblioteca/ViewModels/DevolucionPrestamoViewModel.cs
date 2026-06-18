@@ -10,7 +10,9 @@ public class DevolucionPrestamoViewModel
 
     public string Prestamo { get; set; } = string.Empty;
 
-    public string Empleado { get; set; } = string.Empty;
+    public string Cliente { get; set; } = string.Empty;
+
+    public string EmpleadoRegistro { get; set; } = string.Empty;
 
     public string Libros { get; set; } = string.Empty;
 

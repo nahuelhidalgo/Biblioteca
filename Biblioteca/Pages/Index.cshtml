@@ -10,40 +10,57 @@
     var esAdministrador = string.Equals(rol, RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
-<div class="py-5">
-    <h1 class="display-5">Biblioteca</h1>
+<div class="home-dashboard py-4 py-lg-5">
+    <div class="home-heading">
+        <p class="home-eyebrow">Panel de gestión</p>
+        <h1 class="display-5 fw-semibold">Biblioteca</h1>
+    </div>
     @if (estaAutenticado)
     {
-        <p class="lead">Sesion iniciada como @identidadVisible (@rol).</p>
+        <p class="home-session">Sesión iniciada como <strong>@identidadVisible</strong> <span>@rol</span></p>
         @if (esAdministrador)
         {
             <div class="row g-3 mt-3">
-                <div class="col-md-4">
-                    <section class="border rounded p-3 h-100">
-                        <h2 class="h5">Prestamos</h2>
+                <div class="col-md-6 col-xl-3">
+                    <section class="home-card home-card--loans h-100">
+                        <h2 class="home-card__title">Préstamos</h2>
                         <div class="d-grid gap-2">
-                            <a asp-controller="Prestamos" asp-action="Index" class="btn btn-outline-primary">Ver prestamos</a>
-                            <a asp-controller="MovimientosStock" asp-action="Index" class="btn btn-outline-primary">Ver movimientos</a>
+                            <a asp-controller="Prestamos" asp-action="Create" class="home-action home-action--new">Nuevo préstamo</a>
+                            <a asp-controller="Prestamos" asp-action="Devolver" class="home-action home-action--return">Registrar devolución</a>
+                            <a asp-controller="Prestamos" asp-action="Index" class="home-action home-action--loans">Ver préstamos</a>
+                            <a asp-controller="MovimientosStock" asp-action="Index" class="home-action home-action--movements">Ver movimientos</a>
                         </div>
                     </section>
                 </div>
-                <div class="col-md-4">
-                    <section class="border rounded p-3 h-100">
-                        <h2 class="h5">Libros</h2>
+                <div class="col-md-6 col-xl-3">
+                    <section class="home-card home-card--catalog h-100">
+                        <h2 class="home-card__title">Catálogo</h2>
                         <div class="d-grid gap-2">
-                            <a asp-controller="Libros" asp-action="Index" class="btn btn-outline-primary">Ver libros</a>
-                            <a asp-controller="Autores" asp-action="Index" class="btn btn-outline-primary">Ver autores</a>
-                            <a asp-controller="Categorias" asp-action="Index" class="btn btn-outline-primary">Ver categorias</a>
-                            <a asp-controller="Editoriales" asp-action="Index" class="btn btn-outline-primary">Ver editoriales</a>
+                            <a asp-controller="Libros" asp-action="Index" class="home-action home-action--books">Ver libros</a>
+                            <a asp-controller="Autores" asp-action="Index" class="home-action home-action--authors">Ver autores</a>
+                            <a asp-controller="Categorias" asp-action="Index" class="home-action home-action--categories">Ver categorías</a>
+                            <a asp-controller="Editoriales" asp-action="Index" class="home-action home-action--publishers">Ver editoriales</a>
                         </div>
                     </section>
                 </div>
-                <div class="col-md-4">
-                    <section class="border rounded p-3 h-100">
-                        <h2 class="h5">Gestion de usuarios</h2>
+                <div class="col-md-6 col-xl-3">
+                    <section class="home-card home-card--people h-100">
+                        <h2 class="home-card__title">Gestión de usuarios</h2>
                         <div class="d-grid gap-2">
-                            <a asp-controller="Usuarios" asp-action="Index" class="btn btn-outline-primary">Ver usuarios</a>
-                            <a asp-controller="Empleados" asp-action="Index" class="btn btn-outline-primary">Ver empleados</a>
+                            <a asp-controller="Usuarios" asp-action="Create" class="home-action home-action--new-user">Nuevo usuario</a>
+                            <a asp-controller="Empleados" asp-action="Create" class="home-action home-action--new-employee">Nuevo empleado</a>
+                            <a asp-controller="Usuarios" asp-action="Index" class="home-action home-action--users">Ver usuarios</a>
+                            <a asp-controller="Empleados" asp-action="Index" class="home-action home-action--employees">Ver empleados</a>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <section class="home-card home-card--clients h-100">
+                        <h2 class="home-card__title">Gestión de clientes</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Clientes" asp-action="Create" class="home-action home-action--new-client">Nuevo cliente</a>
+                            <a asp-controller="Clientes" asp-action="Index" class="home-action home-action--clients">Ver clientes</a>
+                            <a asp-controller="Clientes" asp-action="Index" class="home-action home-action--edit-clients">Editar clientes</a>
                         </div>
                     </section>
                 </div>
@@ -52,23 +69,34 @@
         else
         {
             <div class="row g-3 mt-3">
-                <div class="col-md-6">
-                    <section class="border rounded p-3 h-100">
-                        <h2 class="h5">Prestamos</h2>
+                <div class="col-md-4">
+                    <section class="home-card home-card--loans h-100">
+                        <h2 class="home-card__title">Préstamos</h2>
                         <div class="d-grid gap-2">
-                            <a asp-controller="Prestamos" asp-action="Index" class="btn btn-outline-primary">Ver prestamos</a>
-                            <a asp-controller="Prestamos" asp-action="Index" asp-route-vista="vencidos" class="btn btn-outline-primary">Ver prestamos vencidos</a>
+                            <a asp-controller="Prestamos" asp-action="Create" class="home-action home-action--new">Nuevo préstamo</a>
+                            <a asp-controller="Prestamos" asp-action="Devolver" class="home-action home-action--return">Registrar devolución</a>
+                            <a asp-controller="Prestamos" asp-action="Index" class="home-action home-action--loans">Ver préstamos</a>
+                            <a asp-controller="Prestamos" asp-action="Index" asp-route-vista="vencidos" class="home-action home-action--overdue">Ver préstamos vencidos</a>
                         </div>
                     </section>
                 </div>
-                <div class="col-md-6">
-                    <section class="border rounded p-3 h-100">
-                        <h2 class="h5">Libros</h2>
+                <div class="col-md-4">
+                    <section class="home-card home-card--catalog h-100">
+                        <h2 class="home-card__title">Catálogo</h2>
                         <div class="d-grid gap-2">
-                            <a asp-controller="Libros" asp-action="Index" class="btn btn-outline-primary">Ver libros</a>
-                            <a asp-controller="Autores" asp-action="Index" class="btn btn-outline-primary">Ver autores</a>
-                            <a asp-controller="Categorias" asp-action="Index" class="btn btn-outline-primary">Ver categorias</a>
-                            <a asp-controller="Editoriales" asp-action="Index" class="btn btn-outline-primary">Ver editoriales</a>
+                            <a asp-controller="Libros" asp-action="Index" class="home-action home-action--books">Ver libros</a>
+                            <a asp-controller="Autores" asp-action="Index" class="home-action home-action--authors">Ver autores</a>
+                            <a asp-controller="Categorias" asp-action="Index" class="home-action home-action--categories">Ver categorías</a>
+                            <a asp-controller="Editoriales" asp-action="Index" class="home-action home-action--publishers">Ver editoriales</a>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-md-4">
+                    <section class="home-card home-card--clients h-100">
+                        <h2 class="home-card__title">Gestión de clientes</h2>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Clientes" asp-action="Create" class="home-action home-action--new-client">Nuevo cliente</a>
+                            <a asp-controller="Clientes" asp-action="Index" class="home-action home-action--clients">Ver clientes</a>
                         </div>
                     </section>
                 </div>
@@ -78,6 +106,6 @@
     else
     {
         <p class="lead">Ingresa con una cuenta para operar el sistema.</p>
-        <a asp-controller="Cuentas" asp-action="Login" class="btn btn-primary">Iniciar sesion</a>
+        <a asp-controller="Cuentas" asp-action="Login" class="home-action home-action--login home-action--compact">Iniciar sesión</a>
     }
 </div>

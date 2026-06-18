@@ -26,7 +26,7 @@ public class Usuario
 
     public DateTime? UltimoAcceso { get; set; }
 
-    public int LegajoEmpleado { get; set; }
+    public int IdEmpleado { get; set; }
 
     public Empleado Empleado { get; set; } = null!;
 }

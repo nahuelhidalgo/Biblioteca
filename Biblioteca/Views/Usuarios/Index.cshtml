@@ -31,9 +31,11 @@
             <td>@(item.Activo ? "Si" : "No")</td>
             <td>@item.UltimoAcceso?.ToString("dd/MM/yyyy HH:mm")</td>
             <td class="text-end">
-                <a asp-action="Edit" asp-route-id="@item.IdUsuarioSistema">Editar</a> |
-                <a asp-action="Details" asp-route-id="@item.IdUsuarioSistema">Detalle</a> |
-                <a asp-action="Delete" asp-route-id="@item.IdUsuarioSistema">Baja</a>
+                <div class="table-actions">
+                    <a asp-action="Edit" asp-route-id="@item.IdUsuarioSistema" class="btn btn-sm btn-outline-primary">Editar</a>
+                    <a asp-action="Details" asp-route-id="@item.IdUsuarioSistema" class="btn btn-sm btn-outline-secondary">Detalle</a>
+                    <a asp-action="Delete" asp-route-id="@item.IdUsuarioSistema" class="btn btn-sm btn-outline-danger">Baja</a>
+                </div>
             </td>
         </tr>
 }

@@ -19,7 +19,7 @@ public class MovimientosStockController : Controller
     }
 
     public async Task<IActionResult> Index(
-        int? legajoEmpleado,
+        int? idEmpleado,
         DateTime? fechaCreacion,
         int? idLibro,
         TipoMovimientoStock? tipoMovimiento,
@@ -31,9 +31,9 @@ public class MovimientosStockController : Controller
             .Include(m => m.Empleado)
             .AsQueryable();
 
-        if (legajoEmpleado.HasValue)
+        if (idEmpleado.HasValue)
         {
-            movimientosQuery = movimientosQuery.Where(m => m.LegajoEmpleado == legajoEmpleado.Value);
+            movimientosQuery = movimientosQuery.Where(m => m.IdEmpleado == idEmpleado.Value);
         }
 
         if (fechaCreacion.HasValue)
@@ -66,7 +66,7 @@ public class MovimientosStockController : Controller
                 ? movimientosQuery.OrderBy(m => m.Fecha).ThenBy(m => m.IdMovimientoStock)
                 : movimientosQuery.OrderByDescending(m => m.Fecha).ThenByDescending(m => m.IdMovimientoStock);
 
-        await CargarFiltrosAsync(legajoEmpleado, idLibro);
+        await CargarFiltrosAsync(idEmpleado, idLibro);
 
         ViewBag.FechaCreacionFiltro = fechaCreacion?.ToString("yyyy-MM-dd");
         ViewBag.TipoMovimientoFiltro = tipoMovimiento?.ToString();
@@ -113,14 +113,14 @@ public class MovimientosStockController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task CargarFiltrosAsync(int? legajoEmpleado, int? idLibro)
+    private async Task CargarFiltrosAsync(int? idEmpleado, int? idLibro)
     {
         var empleados = await _context.Empleados
             .OrderBy(e => e.Nombre)
             .ThenBy(e => e.Apellido)
             .Select(e => new
             {
-                e.Legajo,
+                e.IdPersona,
                 NombreCompleto = $"{e.Nombre} {e.Apellido}"
             })
             .ToListAsync();
@@ -134,9 +134,9 @@ public class MovimientosStockController : Controller
             })
             .ToListAsync();
 
-        ViewBag.Empleados = new SelectList(empleados, "Legajo", "NombreCompleto", legajoEmpleado);
+        ViewBag.Empleados = new SelectList(empleados, "IdPersona", "NombreCompleto", idEmpleado);
         ViewBag.Libros = new SelectList(libros, "IdLibro", "Descripcion", idLibro);
-        ViewBag.LegajoEmpleadoFiltro = legajoEmpleado;
+        ViewBag.IdEmpleadoFiltro = idEmpleado;
         ViewBag.IdLibroFiltro = idLibro;
     }
 }

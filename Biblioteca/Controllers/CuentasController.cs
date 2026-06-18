@@ -52,7 +52,7 @@ public class CuentasController : Controller
         HttpContext.Session.SetString(SesionKeys.Cuenta, usuario.Email);
         HttpContext.Session.SetString(SesionKeys.NombreEmpleado, usuario.Empleado.NombreCompleto);
         HttpContext.Session.SetString(SesionKeys.Rol, usuario.Rol);
-        HttpContext.Session.SetString(SesionKeys.LegajoEmpleado, usuario.LegajoEmpleado.ToString());
+        HttpContext.Session.SetString(SesionKeys.IdEmpleado, usuario.IdEmpleado.ToString());
 
         return RedirigirDespuesDelLogin(model.ReturnUrl);
     }

@@ -1,0 +1,35 @@
+@model Cliente
+
+@{
+    ViewData["Title"] = "Dar de baja cliente";
+}
+
+<h1>Dar de baja cliente</h1>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+@if (Model.Activo)
+{
+    <p>¿Confirma que desea dar de baja este cliente?</p>
+    <p class="text-muted">Su historial de prestamos se conservara, pero no podra seleccionarse para nuevos prestamos.</p>
+}
+else
+{
+    <div class="alert alert-info">Este cliente ya se encuentra inactivo.</div>
+}
+
+<dl class="row">
+    <dt class="col-sm-3">Cliente</dt>
+    <dd class="col-sm-9">@Model.NombreCompleto</dd>
+    <dt class="col-sm-3">DNI</dt>
+    <dd class="col-sm-9">@Model.DNI</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="IdPersona" />
+    @if (Model.Activo)
+    {
+        <button type="submit" class="btn btn-danger">Dar de baja</button>
+    }
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>

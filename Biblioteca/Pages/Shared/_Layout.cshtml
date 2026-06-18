@@ -31,9 +31,6 @@
                         @if (estaAutenticado)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Libros" asp-action="Index">Libros</a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Prestamos" asp-action="Index">Prestamos</a>
                             </li>
                             @if (esAdministrador)
@@ -41,6 +38,12 @@
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="MovimientosStock" asp-action="Index">Movimientos</a>
                                 </li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Libros" asp-action="Index">Libros</a>
+                            </li>
+                            @if (esAdministrador)
+                            {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="Empleados" asp-action="Index">Empleados</a>
                                 </li>
@@ -48,6 +51,9 @@
                                     <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
                                 </li>
                             }
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Clientes" asp-action="Index">Clientes</a>
+                            </li>
                         }
                     </ul>
                     <ul class="navbar-nav">

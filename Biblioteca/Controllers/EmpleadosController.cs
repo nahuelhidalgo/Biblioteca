@@ -36,10 +36,10 @@ public class EmpleadosController : Controller
 
         var empleado = await _context.Empleados
             .Include(e => e.Usuario)
-            .Include(e => e.Prestamos)
+            .Include(e => e.PrestamosRegistrados)
             .Include(e => e.MovimientosStock)
             .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Legajo == id);
+            .FirstOrDefaultAsync(e => e.IdPersona == id);
 
         return empleado is null ? NotFound() : View(empleado);
     }
@@ -51,7 +51,7 @@ public class EmpleadosController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Legajo,Nombre,Apellido,DNI,Telefono,Direccion")] Empleado empleado)
+    public async Task<IActionResult> Create([Bind("IdPersona,Nombre,Apellido,DNI,Telefono,Direccion")] Empleado empleado)
     {
         var cuenta = CuentasEmpleado.CrearEmail(empleado);
         var passwordInicial = CuentasEmpleado.CrearPasswordInicial(empleado);
@@ -94,9 +94,9 @@ public class EmpleadosController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Legajo,Nombre,Apellido,DNI,Telefono,Direccion")] Empleado empleado)
+    public async Task<IActionResult> Edit(int id, [Bind("IdPersona,Nombre,Apellido,DNI,Telefono,Direccion")] Empleado empleado)
     {
-        if (id != empleado.Legajo)
+        if (id != empleado.IdPersona)
         {
             return NotFound();
         }
@@ -121,7 +121,7 @@ public class EmpleadosController : Controller
         var empleado = await _context.Empleados
             .Include(e => e.Usuario)
             .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Legajo == id);
+            .FirstOrDefaultAsync(e => e.IdPersona == id);
 
         return empleado is null ? NotFound() : View(empleado);
     }
@@ -132,16 +132,16 @@ public class EmpleadosController : Controller
     {
         var empleado = await _context.Empleados
             .Include(e => e.Usuario)
-            .Include(e => e.Prestamos)
+            .Include(e => e.PrestamosRegistrados)
             .Include(e => e.MovimientosStock)
-            .FirstOrDefaultAsync(e => e.Legajo == id);
+            .FirstOrDefaultAsync(e => e.IdPersona == id);
 
         if (empleado is null)
         {
             return RedirectToAction(nameof(Index));
         }
 
-        if (empleado.Usuario is not null || empleado.Prestamos.Any() || empleado.MovimientosStock.Any())
+        if (empleado.Usuario is not null || empleado.PrestamosRegistrados.Any() || empleado.MovimientosStock.Any())
         {
             ModelState.AddModelError(string.Empty, "No se puede eliminar un empleado con usuario, prestamos o movimientos asociados.");
             return View("Delete", empleado);
