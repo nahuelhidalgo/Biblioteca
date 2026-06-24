@@ -17,29 +17,33 @@
     <a asp-action="Create" class="btn btn-primary">Crear cliente</a>
 </p>
 
-<table class="table table-striped">
+<table class="table table-striped align-middle">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Nombre</th>
             <th>DNI</th>
-            <th>Telefono</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Dirección</th>
             @if (esAdministrador)
             {
                 <th>Estado</th>
             }
-            <th>Prestamos</th>
+            <th>Préstamos solicitados</th>
+            <th>Préstamos activos</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model)
 {
+    var prestamosActivos = item.Prestamos.Count(p => p.FechaDevolucion is null);
         <tr>
-            <td>@item.IdPersona</td>
             <td>@item.NombreCompleto</td>
             <td>@item.DNI</td>
             <td>@item.Telefono</td>
+            <td>@item.Email</td>
+            <td>@item.Direccion</td>
             @if (esAdministrador)
             {
                 <td>
@@ -49,15 +53,23 @@
                 </td>
             }
             <td>@item.Prestamos.Count</td>
+            <td>@prestamosActivos</td>
             <td class="text-end">
                 <div class="table-actions">
+                    <a asp-controller="Prestamos" asp-action="Index" asp-route-idCliente="@item.IdPersona" class="btn btn-sm btn-outline-primary">Ver préstamos</a>
                     <a asp-action="Details" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-secondary">Detalle</a>
                     @if (esAdministrador)
                     {
                         <a asp-action="Edit" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-primary">Editar</a>
-                        @if (item.Activo)
+                        if (item.Activo)
                         {
                             <a asp-action="Delete" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-danger">Dar de baja</a>
+                        }
+                        else
+                        {
+                            <form asp-action="Activar" asp-route-id="@item.IdPersona" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                            </form>
                         }
                     }
                 </div>

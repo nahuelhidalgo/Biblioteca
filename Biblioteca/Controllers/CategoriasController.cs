@@ -124,6 +124,22 @@ public class CategoriasController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activar(int id)
+    {
+        var categoria = await _context.Categorias.FindAsync(id);
+
+        if (categoria is not null)
+        {
+            categoria.Activo = true;
+            await _context.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private string? ObtenerReturnUrlLocal(string? returnUrl)
     {
         return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)

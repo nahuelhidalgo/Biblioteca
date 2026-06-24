@@ -4,8 +4,8 @@ namespace Biblioteca.ViewModels;
 
 public class DevolucionPrestamoViewModel
 {
-    [Display(Name = "ID de préstamo")]
-    [Range(1, int.MaxValue, ErrorMessage = "Ingrese un ID de préstamo válido.")]
+    [Display(Name = "Nro. de préstamo")]
+    [Range(1, int.MaxValue, ErrorMessage = "Ingrese un número de préstamo válido.")]
     public int IdPrestamo { get; set; }
 
     public string Prestamo { get; set; } = string.Empty;
@@ -23,7 +23,7 @@ public class DevolucionPrestamoViewModel
 
     [DataType(DataType.DateTime)]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
-    [Display(Name = "Fecha de devolución")]
+    [Display(Name = "Vence el")]
     public DateTime FechaEstimadaDevolucion { get; set; }
 
     [DataType(DataType.DateTime)]

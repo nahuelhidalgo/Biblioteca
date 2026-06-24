@@ -1,57 +1,64 @@
 @model Prestamo
 
 @{
-    ViewData["Title"] = "Detalle de prestamo";
+    ViewData["Title"] = "Detalle de préstamo";
     var tienePendientes = Model.ItemsPrestamo.Any(i => i.FechaDevolucion is null);
-    var estaVencido = tienePendientes && Model.FechaEstimadaDevolucion < DateTime.Now;
+    var diasAtrasoActual = tienePendientes
+        ? Math.Max(0, (DateTime.Now.Date - Model.FechaEstimadaDevolucion.Date).Days)
+        : (Model.ItemsPrestamo.Count == 0 ? 0 : Model.ItemsPrestamo.Max(i => i.DiasRetraso));
+    var estaVencido = tienePendientes && diasAtrasoActual > 0;
     var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
-<h1>Detalle de prestamo</h1>
+<h1>Detalle de préstamo</h1>
 
 <dl class="row">
-    <dt class="col-sm-3">Nro.</dt>
-    <dd class="col-sm-9">@Model.IdPrestamo</dd>
     <dt class="col-sm-3">Cliente</dt>
     <dd class="col-sm-9">@Model.Cliente.NombreCompleto</dd>
     <dt class="col-sm-3">Registrado por</dt>
     <dd class="col-sm-9">@Model.EmpleadoRegistro.NombreCompleto</dd>
     <dt class="col-sm-3">Fecha de creación</dt>
-    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
+    <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
+    <dt class="col-sm-3">Vence el</dt>
+    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
     <dt class="col-sm-3">Fecha de devolución</dt>
-    <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm")</dd>
-    <dt class="col-sm-3">Devolución registrada</dt>
-    <dd class="col-sm-9">@(Model.FechaDevolucion?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+    <dd class="col-sm-9">@(Model.FechaDevolucion?.ToString("dd/MM/yyyy") ?? string.Empty)</dd>
     <dt class="col-sm-3">Estado</dt>
     <dd class="col-sm-9">@Model.Estado</dd>
+    <dt class="col-sm-3">Días de atraso</dt>
+    <dd class="col-sm-9">@diasAtrasoActual</dd>
 </dl>
 
 @if (estaVencido)
 {
-    <div class="alert alert-warning">Este prestamo esta vencido. La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").</div>
+    <div class="alert alert-warning">Este préstamo está vencido hace @diasAtrasoActual día@(diasAtrasoActual == 1 ? "" : "s"). Vencía el @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy").</div>
 }
 
 @if (tienePendientes)
 {
-    <p><a asp-action="Devolver" asp-route-id="@Model.IdPrestamo" class="btn btn-primary">Registrar devolucion</a></p>
+    <p><a asp-action="Devolver" asp-route-id="@Model.IdPrestamo" class="btn btn-primary">Registrar devolución</a></p>
 }
 
 <h2>Libros</h2>
 <table class="table table-striped">
-    <thead><tr><th>Libro</th><th>Estado</th><th>Devuelto el</th><th>Dias retraso</th></tr></thead>
+    <thead><tr><th>Libro</th><th>Estado</th><th>Devuelto el</th><th>Días de atraso</th></tr></thead>
     <tbody>
 @foreach (var item in Model.ItemsPrestamo)
 {
+    var diasAtrasoItem = item.FechaDevolucion is null
+        ? Math.Max(0, (DateTime.Now.Date - Model.FechaEstimadaDevolucion.Date).Days)
+        : item.DiasRetraso;
         <tr>
             <td>@item.Libro.Titulo</td>
             <td>@item.EstadoItem</td>
-            <td>@item.FechaDevolucion?.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@item.DiasRetraso</td>
+            <td>@(item.FechaDevolucion?.ToString("dd/MM/yyyy") ?? string.Empty)</td>
+            <td>@diasAtrasoItem</td>
         </tr>
 }
     </tbody>
 </table>
 
+<a asp-controller="Clientes" asp-action="Details" asp-route-id="@Model.IdCliente" class="btn btn-outline-primary">Ver cliente</a>
 <a asp-action="Index" class="btn btn-secondary">Volver</a>
 @if (esAdministrador)
 {

@@ -4,36 +4,48 @@
     ViewData["Title"] = "Detalle de cliente";
     var rol = Context.Session.GetString(SesionKeys.Rol);
     var esAdministrador = string.Equals(rol, RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
+    var prestamosActivos = Model.Prestamos.Count(p => p.FechaDevolucion is null);
+    var prestamosVencidos = Model.Prestamos.Count(p =>
+        p.FechaDevolucion is null && p.FechaEstimadaDevolucion.Date < DateTime.Now.Date);
+    var ultimoPrestamo = Model.Prestamos
+        .OrderByDescending(p => p.Fecha)
+        .FirstOrDefault();
 }
 
 <h1>Detalle de cliente</h1>
 
 <dl class="row">
-    <dt class="col-sm-3">ID</dt>
-    <dd class="col-sm-9">@Model.IdPersona</dd>
     <dt class="col-sm-3">Nombre</dt>
     <dd class="col-sm-9">@Model.NombreCompleto</dd>
     <dt class="col-sm-3">DNI</dt>
     <dd class="col-sm-9">@Model.DNI</dd>
-    <dt class="col-sm-3">Telefono</dt>
+    <dt class="col-sm-3">Teléfono</dt>
     <dd class="col-sm-9">@Model.Telefono</dd>
-    <dt class="col-sm-3">Direccion</dt>
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@Model.Email</dd>
+    <dt class="col-sm-3">Dirección</dt>
     <dd class="col-sm-9">@Model.Direccion</dd>
     @if (esAdministrador)
     {
         <dt class="col-sm-3">Estado</dt>
         <dd class="col-sm-9">@(Model.Activo ? "Activo" : "Inactivo")</dd>
     }
-    <dt class="col-sm-3">Prestamos registrados</dt>
+    <dt class="col-sm-3">Préstamos solicitados</dt>
     <dd class="col-sm-9">@Model.Prestamos.Count</dd>
+    <dt class="col-sm-3">Préstamos activos</dt>
+    <dd class="col-sm-9">@prestamosActivos</dd>
+    <dt class="col-sm-3">Préstamos vencidos</dt>
+    <dd class="col-sm-9">@prestamosVencidos</dd>
+    <dt class="col-sm-3">Último préstamo</dt>
+    <dd class="col-sm-9">@(ultimoPrestamo?.Fecha.ToString("dd/MM/yyyy") ?? "Sin préstamos registrados")</dd>
 </dl>
 
+@if (Model.Prestamos.Count > 0)
+{
+    <a asp-controller="Prestamos" asp-action="Index" asp-route-idCliente="@Model.IdPersona" class="btn btn-outline-primary">Ver préstamos</a>
+}
 @if (esAdministrador)
 {
     <a asp-action="Edit" asp-route-id="@Model.IdPersona" class="btn btn-primary">Editar</a>
-}
-@if (Model.Prestamos.Count > 0)
-{
-    <a asp-controller="Prestamos" asp-action="Index" asp-route-idCliente="@Model.IdPersona" class="btn btn-outline-secondary">Ver prestamos</a>
 }
 <a asp-action="Index" class="btn btn-secondary">Volver</a>

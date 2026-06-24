@@ -390,7 +390,12 @@ namespace Biblioteca.Migrations
                     b.HasBaseType("Biblioteca.Modelos.Persona");
 
                     b.Property<bool>("Activo")
+                        .HasColumnName("Activo")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.HasDiscriminator().HasValue("Cliente");
                 });
@@ -398,6 +403,10 @@ namespace Biblioteca.Migrations
             modelBuilder.Entity("Biblioteca.Modelos.Empleado", b =>
                 {
                     b.HasBaseType("Biblioteca.Modelos.Persona");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnName("Activo")
+                        .HasColumnType("bit");
 
                     b.HasDiscriminator().HasValue("Empleado");
                 });
@@ -461,9 +470,16 @@ namespace Biblioteca.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Biblioteca.Modelos.Prestamo", "Prestamo")
+                        .WithMany()
+                        .HasForeignKey("IdPrestamo")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Empleado");
 
                     b.Navigation("Libro");
+
+                    b.Navigation("Prestamo");
                 });
 
             modelBuilder.Entity("Biblioteca.Modelos.Prestamo", b =>

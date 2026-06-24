@@ -53,6 +53,7 @@ public class UsuariosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("IdUsuarioSistema,Email,Password,Rol,Activo,UltimoAcceso,IdEmpleado")] Usuario usuario)
     {
+        ModelState.Remove(nameof(Usuario.Empleado));
         usuario.Email = (usuario.Email ?? string.Empty).Trim().ToLowerInvariant();
         var empleado = await _context.Empleados
             .AsNoTracking()
@@ -108,9 +109,12 @@ public class UsuariosController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("IdUsuarioSistema,Email,Password,Rol,Activo,UltimoAcceso,IdEmpleado")] Usuario usuario)
+    public async Task<IActionResult> Edit(int? id, [Bind("IdUsuarioSistema,Email,Password,Rol,Activo,UltimoAcceso,IdEmpleado")] Usuario usuario)
     {
-        if (id != usuario.IdUsuarioSistema)
+        ModelState.Remove(nameof(Usuario.Empleado));
+        var idUsuario = id ?? usuario.IdUsuarioSistema;
+
+        if (idUsuario != usuario.IdUsuarioSistema)
         {
             return NotFound();
         }
@@ -147,7 +151,19 @@ public class UsuariosController : Controller
             return View(usuario);
         }
 
-        _context.Update(usuario);
+        var usuarioExistente = await _context.Usuarios.FindAsync(idUsuario);
+
+        if (usuarioExistente is null)
+        {
+            return NotFound();
+        }
+
+        usuarioExistente.Email = usuario.Email;
+        usuarioExistente.Password = usuario.Password;
+        usuarioExistente.Rol = usuario.Rol;
+        usuarioExistente.Activo = usuario.Activo;
+        usuarioExistente.IdEmpleado = usuario.IdEmpleado;
+
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -182,12 +198,29 @@ public class UsuariosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activar(int id)
+    {
+        var usuario = await _context.Usuarios.FindAsync(id);
+
+        if (usuario is not null)
+        {
+            usuario.Activo = true;
+            await _context.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private async Task CargarEmpleadosDisponiblesAsync(int? seleccionado = null, int? usuarioActualId = null)
     {
         var empleados = await _context.Empleados
-            .Where(e => e.Usuario == null
+            .Where(e => (e.Activo && e.Usuario == null)
                 || (seleccionado != null && e.IdPersona == seleccionado)
-                || (usuarioActualId != null && e.Usuario.IdUsuarioSistema == usuarioActualId))
+                || (usuarioActualId != null
+                    && e.Usuario != null
+                    && e.Usuario.IdUsuarioSistema == usuarioActualId))
             .OrderBy(e => e.Nombre)
             .ThenBy(e => e.Apellido)
             .Select(e => new

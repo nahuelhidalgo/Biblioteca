@@ -5,18 +5,30 @@
     var esAdministrador = string.Equals(Context.Session.GetString(SesionKeys.Rol), RolesSistema.Administrador, StringComparison.OrdinalIgnoreCase);
 }
 
+@functions {
+    private static string NombreTipoMovimiento(TipoMovimientoStock? tipo)
+    {
+        return tipo switch
+        {
+            TipoMovimientoStock.Devolucion => "Devolución",
+            TipoMovimientoStock.Prestado => "Prestado",
+            _ => "-"
+        };
+    }
+}
+
 <h1>Detalle de libro</h1>
 
 <dl class="row">
     <dt class="col-sm-3">ISBN</dt>
     <dd class="col-sm-9">@Model.ISBN</dd>
-    <dt class="col-sm-3">Titulo</dt>
+    <dt class="col-sm-3">Título</dt>
     <dd class="col-sm-9">@Model.Titulo</dd>
     <dt class="col-sm-3">Autor</dt>
     <dd class="col-sm-9">
         <a asp-controller="Autores" asp-action="Details" asp-route-id="@Model.IdAutor">@Model.Autor.Apellido, @Model.Autor.Nombre</a>
     </dd>
-    <dt class="col-sm-3">Categoria</dt>
+    <dt class="col-sm-3">Categoría</dt>
     <dd class="col-sm-9">
         <a asp-controller="Categorias" asp-action="Details" asp-route-id="@Model.IdCategoria">@Model.Categoria.Nombre</a>
     </dd>
@@ -28,18 +40,19 @@
     <dd class="col-sm-9">@Model.AnioPublicacion</dd>
     <dt class="col-sm-3">Stock</dt>
     <dd class="col-sm-9">@Model.StockDisponible disponible de @Model.StockTotal</dd>
-    <dt class="col-sm-3">Activo</dt>
-    <dd class="col-sm-9">@(Model.Activo ? "Si" : "No")</dd>
+    <dt class="col-sm-3">Estado</dt>
+    <dd class="col-sm-9">@(Model.Activo ? "Activo" : "Inactivo")</dd>
 </dl>
 
 @if (esAdministrador)
 {
     <h2>Movimientos</h2>
-    <table class="table table-sm">
+    <table class="table table-sm align-middle">
         <thead>
             <tr>
                 <th>Fecha</th>
-                <th>ID prestamo</th>
+                <th>Cliente</th>
+                <th>Responsable</th>
                 <th>Tipo</th>
                 <th>Cantidad</th>
                 <th>Motivo</th>
@@ -50,8 +63,9 @@
 {
             <tr>
                 <td>@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>@(movimiento.IdPrestamo?.ToString() ?? "-")</td>
-                <td>@movimiento.TipoMovimiento</td>
+                <td>@(movimiento.Prestamo?.Cliente.NombreCompleto ?? "-")</td>
+                <td>@(movimiento.Empleado?.NombreCompleto ?? "-")</td>
+                <td>@NombreTipoMovimiento(movimiento.TipoMovimiento)</td>
                 <td>@movimiento.Cantidad</td>
                 <td>@movimiento.Motivo</td>
             </tr>

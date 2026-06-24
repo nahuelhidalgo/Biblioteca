@@ -63,7 +63,7 @@ public class ClientesController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        [Bind("Nombre,Apellido,DNI,Telefono,Direccion")] Cliente cliente,
+        [Bind("Nombre,Apellido,DNI,Telefono,Direccion,Email")] Cliente cliente,
         string? returnUrl = null)
     {
         var returnUrlLocal = ObtenerReturnUrlLocal(returnUrl);
@@ -105,7 +105,7 @@ public class ClientesController : Controller
     [SesionAuthorize(RolesSistema.Administrador)]
     public async Task<IActionResult> Edit(
         int id,
-        [Bind("IdPersona,Nombre,Apellido,DNI,Telefono,Direccion")] Cliente cliente)
+        [Bind("IdPersona,Nombre,Apellido,DNI,Telefono,Direccion,Email")] Cliente cliente)
     {
         if (id != cliente.IdPersona)
         {
@@ -131,6 +131,7 @@ public class ClientesController : Controller
         clienteExistente.DNI = cliente.DNI;
         clienteExistente.Telefono = cliente.Telefono;
         clienteExistente.Direccion = cliente.Direccion;
+        clienteExistente.Email = cliente.Email;
         await _context.SaveChangesAsync();
 
         TempData["Mensaje"] = "Cliente actualizado correctamente.";
@@ -167,10 +168,35 @@ public class ClientesController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        if (cliente.Prestamos.Any(p => p.FechaDevolucion is null))
+        {
+            ModelState.AddModelError(string.Empty, "Para dar de baja el cliente, primero debe cerrar sus préstamos activos.");
+            return View("Delete", cliente);
+        }
+
         cliente.Activo = false;
         await _context.SaveChangesAsync();
 
         TempData["Mensaje"] = "Cliente dado de baja correctamente.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [SesionAuthorize(RolesSistema.Administrador)]
+    public async Task<IActionResult> Activar(int id)
+    {
+        var cliente = await _context.Clientes.FindAsync(id);
+
+        if (cliente is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        cliente.Activo = true;
+        await _context.SaveChangesAsync();
+
+        TempData["Mensaje"] = "Cliente activado correctamente.";
         return RedirectToAction(nameof(Index));
     }
 

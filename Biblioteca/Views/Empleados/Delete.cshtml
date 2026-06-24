@@ -2,22 +2,31 @@
 
 @{
     ViewData["Title"] = "Eliminar empleado";
+    var usuarioActivo = Model.Usuario?.Activo == true;
 }
 
 <h1>Eliminar empleado</h1>
 
 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-<p>Solo se podra eliminar si no tiene usuario, prestamos ni movimientos asociados.</p>
+<p>Para eliminar un empleado, su usuario debe estar inactivo previamente.</p>
+<p class="text-muted">La eliminación marca al empleado como inactivo para conservar el historial de préstamos y movimientos.</p>
+
+@if (usuarioActivo)
+{
+    <div class="alert alert-warning">Este empleado tiene un usuario activo. Si intenta eliminarlo, la operación será rechazada hasta que inactive ese usuario.</div>
+}
 
 <dl class="row">
     <dt class="col-sm-3">Empleado</dt>
     <dd class="col-sm-9">@Model.NombreCompleto</dd>
     <dt class="col-sm-3">Usuario</dt>
-    <dd class="col-sm-9">@Model.Usuario?.Email</dd>
+    <dd class="col-sm-9">@(Model.Usuario?.Email ?? "Sin usuario asociado")</dd>
+    <dt class="col-sm-3">Estado del usuario</dt>
+    <dd class="col-sm-9">@(Model.Usuario is null ? "Sin usuario" : (Model.Usuario.Activo ? "Activo" : "Inactivo"))</dd>
 </dl>
 
-<form asp-action="Delete">
+<form asp-action="Delete" method="post">
     <input type="hidden" asp-for="IdPersona" />
     <button type="submit" class="btn btn-danger">Eliminar</button>
     <a asp-action="Index" class="btn btn-secondary">Volver</a>

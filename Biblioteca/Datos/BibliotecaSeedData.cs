@@ -28,11 +28,11 @@ public static class BibliotecaSeedData
             context, "30345678", "Carlos", "Gomez", "1145678901", "Administracion");
 
         var ana = await ObtenerOCrearClienteAsync(
-            context, "30234567", "Ana Maria", "Perez", "1134567890", "Buenos Aires 1200");
+            context, "30234567", "Ana Maria", "Perez", "1134567890", "ana.perez@email.com", "Buenos Aires 1200");
         var lucia = await ObtenerOCrearClienteAsync(
-            context, "30456789", "Lucia", "Fernandez", "1156789012", "Cordoba 850");
+            context, "30456789", "Lucia", "Fernandez", "1156789012", "lucia.fernandez@email.com", "Cordoba 850");
         var martin = await ObtenerOCrearClienteAsync(
-            context, "30567890", "Martin", "Silva", "1167890123", "Santa Fe 430");
+            context, "30567890", "Martin", "Silva", "1167890123", "martin.silva@email.com", "Santa Fe 430");
 
         await context.SaveChangesAsync();
 
@@ -118,7 +118,7 @@ public static class BibliotecaSeedData
             context.MovimientosStock.Add(new MovimientoStock
             {
                 IdLibro = libro.IdLibro,
-                TipoMovimiento = TipoMovimientoStock.AltaStock,
+                TipoMovimiento = TipoMovimientoStock.Devolucion,
                 Cantidad = cantidad,
                 Motivo = "Carga inicial de datos",
                 Fecha = DateTime.Now
@@ -247,7 +247,7 @@ public static class BibliotecaSeedData
             IdLibro = item.IdLibro,
             IdPrestamo = item.Prestamo.IdPrestamo,
             IdEmpleado = item.Prestamo.IdEmpleadoRegistro,
-            TipoMovimiento = TipoMovimientoStock.AltaStock,
+            TipoMovimiento = TipoMovimientoStock.Devolucion,
             Cantidad = 1,
             Motivo = "Devolucion de prestamo",
             Fecha = fecha
@@ -262,7 +262,7 @@ public static class BibliotecaSeedData
         var empleado = await context.Empleados.FirstOrDefaultAsync(e => e.DNI == dni);
         if (empleado is null)
         {
-            empleado = new Empleado { DNI = dni };
+            empleado = new Empleado { DNI = dni, Activo = true };
             context.Empleados.Add(empleado);
         }
 
@@ -271,7 +271,7 @@ public static class BibliotecaSeedData
     }
 
     private static async Task<Cliente> ObtenerOCrearClienteAsync(
-        BibliotecaContext context, string dni, string nombre, string apellido, string telefono, string direccion)
+        BibliotecaContext context, string dni, string nombre, string apellido, string telefono, string email, string direccion)
     {
         var cliente = await context.Clientes.FirstOrDefaultAsync(c => c.DNI == dni);
         if (cliente is null)
@@ -281,6 +281,7 @@ public static class BibliotecaSeedData
         }
 
         ActualizarPersona(cliente, nombre, apellido, telefono, direccion);
+        cliente.Email = email;
         return cliente;
     }
 
@@ -295,14 +296,26 @@ public static class BibliotecaSeedData
     private static async Task<Usuario> ObtenerOCrearUsuarioAsync(
         BibliotecaContext context, int idEmpleado, string cuenta, string password, string rol)
     {
-        var usuario = await context.Usuarios.FirstOrDefaultAsync(u => u.IdEmpleado == idEmpleado);
+        var cuentaNormalizada = cuenta.Trim().ToLowerInvariant();
+        var usuarioPorEmpleado = await context.Usuarios.FirstOrDefaultAsync(u => u.IdEmpleado == idEmpleado);
+        var usuarioPorCuenta = await context.Usuarios.FirstOrDefaultAsync(u => u.Email == cuentaNormalizada);
+        var usuario = usuarioPorEmpleado ?? usuarioPorCuenta;
+
         if (usuario is null)
         {
             usuario = new Usuario { IdEmpleado = idEmpleado };
             context.Usuarios.Add(usuario);
         }
+        else if (usuario.IdEmpleado != idEmpleado && usuarioPorEmpleado is null)
+        {
+            usuario.IdEmpleado = idEmpleado;
+        }
 
-        usuario.Email = cuenta;
+        if (usuarioPorCuenta is null || usuarioPorCuenta.IdUsuarioSistema == usuario.IdUsuarioSistema)
+        {
+            usuario.Email = cuentaNormalizada;
+        }
+
         usuario.Password = password;
         usuario.Rol = rol;
         usuario.Activo = true;

@@ -27,10 +27,13 @@ public class PrestamosController : Controller
         bool mostrarFinalizados = false)
     {
         var ahora = DateTime.Now;
+        var hoy = ahora.Date;
+        var limiteProximosVencimientos = hoy.AddDays(8);
         var mostrarVencidos = string.Equals(vista, "vencidos", StringComparison.OrdinalIgnoreCase);
+        var mostrarProximosVencimientos = string.Equals(vista, "proximos-vencimientos", StringComparison.OrdinalIgnoreCase);
         var criterioOrden = orden?.ToLowerInvariant() switch
         {
-            "activos" => "activos",
+            "vencimiento" => "vencimiento",
             "id" => "id",
             _ => "fecha"
         };
@@ -57,11 +60,20 @@ public class PrestamosController : Controller
                 p.FechaDevolucion == null && p.FechaEstimadaDevolucion < ahora);
         }
 
+        if (mostrarProximosVencimientos)
+        {
+            prestamosQuery = prestamosQuery.Where(p =>
+                p.FechaDevolucion == null
+                && p.FechaEstimadaDevolucion >= hoy
+                && p.FechaEstimadaDevolucion < limiteProximosVencimientos);
+        }
+
         prestamosQuery = criterioOrden switch
         {
-            "activos" => prestamosQuery
-                .OrderBy(p => p.Estado == "Activo" ? 0 : 1)
-                .ThenBy(p => p.IdPrestamo),
+            "vencimiento" => prestamosQuery
+                .OrderBy(p => p.FechaDevolucion == null ? 0 : 1)
+                .ThenBy(p => p.FechaEstimadaDevolucion)
+                .ThenByDescending(p => p.Fecha),
             "id" => prestamosQuery.OrderBy(p => p.IdPrestamo),
             _ => prestamosQuery
                 .OrderByDescending(p => p.Fecha)
@@ -106,11 +118,6 @@ public class PrestamosController : Controller
             .ThenInclude(i => i.Libro)
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.IdPrestamo == id);
-
-        if (prestamo is not null && !PuedeAccederPrestamo(prestamo.IdEmpleadoRegistro))
-        {
-            return NotFound();
-        }
 
         return prestamo is null ? NotFound() : View(prestamo);
     }
@@ -262,7 +269,7 @@ public class PrestamosController : Controller
         try
         {
             var fechaPrestamo = DateTime.Now;
-            var fechaDevolucion = fechaPrestamo.Date.AddDays(prestamoModel.DuracionDias!.Value);
+            var fechaEstimadaDevolucion = fechaPrestamo.Date.AddDays(prestamoModel.DuracionDias!.Value);
             var librosIds = prestamoModel.Items
                 .SelectMany(item => Enumerable.Repeat(item.IdLibro, item.Cantidad))
                 .ToList();
@@ -272,7 +279,7 @@ public class PrestamosController : Controller
                 prestamoModel.IdCliente!.Value,
                 librosIds,
                 fechaPrestamo,
-                fechaDevolucion);
+                fechaEstimadaDevolucion);
 
             return RedirectToAction(nameof(Index));
         }
@@ -295,7 +302,7 @@ public class PrestamosController : Controller
 
         if (model is null)
         {
-            ModelState.AddModelError(nameof(DevolucionPrestamoViewModel.IdPrestamo), "No se encontro un prestamo con ese ID.");
+            ModelState.AddModelError(nameof(DevolucionPrestamoViewModel.IdPrestamo), "No se encontró un préstamo con ese número.");
             return View(new DevolucionPrestamoViewModel { IdPrestamo = id.Value });
         }
 
@@ -678,7 +685,7 @@ public class PrestamosController : Controller
                 IdLibro = item.IdLibro,
                 IdPrestamo = prestamo.IdPrestamo,
                 IdEmpleado = idEmpleado,
-                TipoMovimiento = TipoMovimientoStock.AltaStock,
+                TipoMovimiento = TipoMovimientoStock.Devolucion,
                 Cantidad = 1,
                 Motivo = "Devolucion de prestamo",
                 Fecha = DateTime.Now
@@ -720,7 +727,7 @@ public class PrestamosController : Controller
                 IdLibro = libro.IdLibro,
                 IdPrestamo = prestamo.IdPrestamo,
                 IdEmpleado = idAdministrador,
-                TipoMovimiento = TipoMovimientoStock.AltaStock,
+                TipoMovimiento = TipoMovimientoStock.Devolucion,
                 Cantidad = cantidad,
                 Motivo = "Restitución de stock por baja de prestamo por administrador",
                 Fecha = DateTime.Now
@@ -764,7 +771,7 @@ public class PrestamosController : Controller
         return new DevolucionPrestamoViewModel
         {
             IdPrestamo = prestamo.IdPrestamo,
-            Prestamo = $"Prestamo #{prestamo.IdPrestamo}",
+            Prestamo = $"Préstamo nro. {prestamo.IdPrestamo}",
             Cliente = prestamo.Cliente.NombreCompleto,
             EmpleadoRegistro = prestamo.EmpleadoRegistro.NombreCompleto,
             Libros = itemsPendientes.Count == 0

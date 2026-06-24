@@ -1,19 +1,23 @@
 @model DevolucionPrestamoViewModel
 
 @{
-    ViewData["Title"] = "Registrar devolucion";
+    ViewData["Title"] = "Registrar devolución";
     var prestamoCargado = Model.IdPrestamo > 0 && !string.IsNullOrWhiteSpace(Model.Prestamo);
 }
 
-<h1>Registrar devolucion</h1>
+<h1>Registrar devolución</h1>
 
-<form asp-action="Devolver" method="get" class="row g-3 align-items-end mb-4">
-    <div class="col-md-4">
-        <label asp-for="IdPrestamo" class="form-label"></label>
-        <input id="IdPrestamo" name="id" type="number" class="form-control" value="@(Model.IdPrestamo > 0 ? Model.IdPrestamo.ToString() : string.Empty)" />
-        <span asp-validation-for="IdPrestamo" class="text-danger"></span>
+<form asp-action="Devolver" method="get" class="mb-4">
+    <div class="d-flex flex-wrap align-items-start gap-3">
+        <div style="min-width: 280px; max-width: 420px; flex: 1 1 320px;">
+            <label asp-for="IdPrestamo" class="form-label"></label>
+            <input id="IdPrestamo" name="id" type="number" class="form-control" value="@(Model.IdPrestamo > 0 ? Model.IdPrestamo.ToString() : string.Empty)" />
+            <span asp-validation-for="IdPrestamo" class="text-danger"></span>
+        </div>
+        <div class="pt-4">
+            <button type="submit" class="btn btn-outline-primary">Buscar préstamo</button>
+        </div>
     </div>
-    <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Buscar prestamo</button></div>
 </form>
 
 @if (prestamoCargado)
@@ -35,16 +39,16 @@
 
         @if (Model.EstaVencido)
         {
-            <div class="alert alert-warning">Este prestamo esta vencido hace @Model.DiasVencido dia(s). La fecha de devolución era @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm").</div>
+            <div class="alert alert-warning">Este préstamo está vencido hace @Model.DiasVencido día@(Model.DiasVencido == 1 ? "" : "s"). Vencía el @Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy").</div>
         }
 
         @if (Model.YaDevuelto)
         {
-            <div class="alert alert-info">Este prestamo no tiene libros pendientes de devolución.</div>
+            <div class="alert alert-info">Este préstamo no tiene libros pendientes de devolución.</div>
         }
 
         <dl class="row">
-            <dt class="col-sm-3">Prestamo</dt>
+            <dt class="col-sm-3">Préstamo</dt>
             <dd class="col-sm-9">@Model.Prestamo</dd>
             <dt class="col-sm-3">Cliente</dt>
             <dd class="col-sm-9">@Model.Cliente</dd>
@@ -53,14 +57,14 @@
             <dt class="col-sm-3">Libros pendientes</dt>
             <dd class="col-sm-9">@Model.Libros</dd>
             <dt class="col-sm-3">Fecha de creación</dt>
-            <dd class="col-sm-9">@Model.FechaPrestamo.ToString("dd/MM/yyyy HH:mm")</dd>
-            <dt class="col-sm-3">Fecha de devolución</dt>
-            <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy HH:mm")</dd>
+            <dd class="col-sm-9">@Model.FechaPrestamo.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Vence el</dt>
+            <dd class="col-sm-9">@Model.FechaEstimadaDevolucion.ToString("dd/MM/yyyy")</dd>
         </dl>
 
         @if (!Model.YaDevuelto)
         {
-            <button type="submit" class="btn btn-primary">Registrar devolucion</button>
+            <button type="submit" class="btn btn-primary">Registrar devolución</button>
         }
         <a asp-action="Index" class="btn btn-secondary">Volver</a>
     </form>

@@ -4,29 +4,59 @@
     ViewData["Title"] = "Movimientos";
     var orden = ViewBag.Orden as string ?? "fecha";
     var direccion = ViewBag.Direccion as string ?? "desc";
-    var proximaDireccionFecha = orden == "fecha" && direccion == "asc" ? "desc" : "asc";
-    var proximaDireccionCantidad = orden == "cantidad" && direccion == "asc" ? "desc" : "asc";
     var idEmpleadoFiltro = ViewBag.IdEmpleadoFiltro;
-    var fechaCreacionFiltro = ViewBag.FechaCreacionFiltro as string;
+    var idClienteFiltro = ViewBag.IdClienteFiltro;
+    var fechaDesdeFiltro = ViewBag.FechaDesdeFiltro as string;
+    var fechaHastaFiltro = ViewBag.FechaHastaFiltro as string;
     var idLibroFiltro = ViewBag.IdLibroFiltro;
     var tipoMovimientoFiltro = ViewBag.TipoMovimientoFiltro as string;
+    var proximaDireccionFecha = orden == "fecha" && direccion == "asc" ? "desc" : "asc";
+    var proximaDireccionCantidad = orden == "cantidad" && direccion == "asc" ? "desc" : "asc";
+    var textoOrdenFecha = proximaDireccionFecha == "asc"
+        ? "Ordenar por fecha ascendente"
+        : "Ordenar por fecha descendente";
+    var textoOrdenCantidad = proximaDireccionCantidad == "asc"
+        ? "Ordenar por cantidad ascendente"
+        : "Ordenar por cantidad descendente";
+}
+
+@functions {
+    private static string NombreTipoMovimiento(TipoMovimientoStock? tipo)
+    {
+        return tipo switch
+        {
+            TipoMovimientoStock.Devolucion => "Devolución",
+            TipoMovimientoStock.Prestado => "Prestado",
+            _ => "-"
+        };
+    }
 }
 
 <h1>Movimientos</h1>
 
 <form asp-action="Index" method="get" class="row g-2 mb-3">
     <div class="col-md-3">
-        <label class="form-label" for="idEmpleado">Empleado responsable</label>
+        <label class="form-label" for="idEmpleado">Responsable</label>
         <select id="idEmpleado" name="idEmpleado" class="form-select" asp-items="ViewBag.Empleados">
             <option value="">Todos</option>
         </select>
     </div>
     <div class="col-md-3">
-        <label class="form-label" for="fechaCreacion">Fecha de creación</label>
-        <input id="fechaCreacion" name="fechaCreacion" type="date" value="@fechaCreacionFiltro" class="form-control" />
+        <label class="form-label" for="idCliente">Cliente</label>
+        <select id="idCliente" name="idCliente" class="form-select" asp-items="ViewBag.Clientes">
+            <option value="">Todos</option>
+        </select>
     </div>
     <div class="col-md-3">
-        <label class="form-label" for="idLibro">Libro prestado</label>
+        <label class="form-label" for="fechaDesde">Desde</label>
+        <input id="fechaDesde" name="fechaDesde" type="date" value="@fechaDesdeFiltro" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="fechaHasta">Hasta</label>
+        <input id="fechaHasta" name="fechaHasta" type="date" value="@fechaHastaFiltro" class="form-control" />
+    </div>
+    <div class="col-md-6">
+        <label class="form-label" for="idLibro">Libro</label>
         <select id="idLibro" name="idLibro" class="form-select" asp-items="ViewBag.Libros">
             <option value="">Todos</option>
         </select>
@@ -39,51 +69,53 @@
             {
                 if (tipoMovimientoFiltro == tipo.ToString())
                 {
-                    <option value="@tipo" selected>@tipo</option>
+                    <option value="@tipo" selected>@NombreTipoMovimiento(tipo)</option>
                 }
                 else
                 {
-                    <option value="@tipo">@tipo</option>
+                    <option value="@tipo">@NombreTipoMovimiento(tipo)</option>
                 }
             }
         </select>
     </div>
     <input type="hidden" name="orden" value="@orden" />
     <input type="hidden" name="direccion" value="@direccion" />
-    <div class="col-12 d-flex gap-2">
+    <div class="col-12 d-flex flex-wrap gap-2">
         <button type="submit" class="btn btn-outline-primary">Filtrar</button>
         <a asp-action="Index" class="btn btn-outline-secondary">Limpiar filtros</a>
+        <a asp-action="Index"
+           asp-route-idEmpleado="@idEmpleadoFiltro"
+           asp-route-idCliente="@idClienteFiltro"
+           asp-route-fechaDesde="@fechaDesdeFiltro"
+           asp-route-fechaHasta="@fechaHastaFiltro"
+           asp-route-idLibro="@idLibroFiltro"
+           asp-route-tipoMovimiento="@tipoMovimientoFiltro"
+           asp-route-orden="fecha"
+           asp-route-direccion="@proximaDireccionFecha"
+           class="btn @(orden == "fecha" ? "btn-secondary" : "btn-outline-secondary")">@textoOrdenFecha</a>
+        <a asp-action="Index"
+           asp-route-idEmpleado="@idEmpleadoFiltro"
+           asp-route-idCliente="@idClienteFiltro"
+           asp-route-fechaDesde="@fechaDesdeFiltro"
+           asp-route-fechaHasta="@fechaHastaFiltro"
+           asp-route-idLibro="@idLibroFiltro"
+           asp-route-tipoMovimiento="@tipoMovimientoFiltro"
+           asp-route-orden="cantidad"
+           asp-route-direccion="@proximaDireccionCantidad"
+           class="btn @(orden == "cantidad" ? "btn-secondary" : "btn-outline-secondary")">@textoOrdenCantidad</a>
     </div>
 </form>
 
-<table class="table table-striped">
+<table class="table table-striped align-middle">
     <thead>
         <tr>
-            <th>
-                <a asp-action="Index"
-                   asp-route-idEmpleado="@idEmpleadoFiltro"
-                   asp-route-fechaCreacion="@fechaCreacionFiltro"
-                   asp-route-idLibro="@idLibroFiltro"
-                   asp-route-tipoMovimiento="@tipoMovimientoFiltro"
-                   asp-route-orden="fecha"
-                   asp-route-direccion="@proximaDireccionFecha">
-                    Fecha @(orden == "fecha" ? (direccion == "asc" ? "asc" : "desc") : "")
-                </a>
-            </th>
-            <th>ID prestamo</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Responsable</th>
             <th>ISBN</th>
             <th>Libro</th>
-            <th>
-                <a asp-action="Index"
-                   asp-route-idEmpleado="@idEmpleadoFiltro"
-                   asp-route-fechaCreacion="@fechaCreacionFiltro"
-                   asp-route-idLibro="@idLibroFiltro"
-                   asp-route-tipoMovimiento="@tipoMovimientoFiltro"
-                   asp-route-orden="cantidad"
-                   asp-route-direccion="@proximaDireccionCantidad">
-                    Cantidad @(orden == "cantidad" ? (direccion == "asc" ? "asc" : "desc") : "")
-                </a>
-            </th>
+            <th>Tipo</th>
+            <th>Cantidad</th>
             <th>Motivo</th>
             <th></th>
         </tr>
@@ -93,9 +125,11 @@
 {
         <tr>
             <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@(item.IdPrestamo?.ToString() ?? "-")</td>
+            <td>@(item.Prestamo?.Cliente.NombreCompleto ?? "-")</td>
+            <td>@(item.Empleado?.NombreCompleto ?? "-")</td>
             <td>@item.Libro.ISBN</td>
             <td>@item.Libro.Titulo</td>
+            <td>@NombreTipoMovimiento(item.TipoMovimiento)</td>
             <td>@item.Cantidad</td>
             <td>@item.Motivo</td>
             <td class="text-end">

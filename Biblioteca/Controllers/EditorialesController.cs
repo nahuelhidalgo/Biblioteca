@@ -124,6 +124,22 @@ public class EditorialesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activar(int id)
+    {
+        var editorial = await _context.Editoriales.FindAsync(id);
+
+        if (editorial is not null)
+        {
+            editorial.Activo = true;
+            await _context.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private string? ObtenerReturnUrlLocal(string? returnUrl)
     {
         return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)

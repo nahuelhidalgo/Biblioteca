@@ -20,7 +20,9 @@ public class MovimientosStockController : Controller
 
     public async Task<IActionResult> Index(
         int? idEmpleado,
-        DateTime? fechaCreacion,
+        int? idCliente,
+        DateTime? fechaDesde,
+        DateTime? fechaHasta,
         int? idLibro,
         TipoMovimientoStock? tipoMovimiento,
         string? orden,
@@ -29,6 +31,8 @@ public class MovimientosStockController : Controller
         var movimientosQuery = _context.MovimientosStock
             .Include(m => m.Libro)
             .Include(m => m.Empleado)
+            .Include(m => m.Prestamo)
+            .ThenInclude(p => p!.Cliente)
             .AsQueryable();
 
         if (idEmpleado.HasValue)
@@ -36,11 +40,21 @@ public class MovimientosStockController : Controller
             movimientosQuery = movimientosQuery.Where(m => m.IdEmpleado == idEmpleado.Value);
         }
 
-        if (fechaCreacion.HasValue)
+        if (idCliente.HasValue)
         {
-            var desde = fechaCreacion.Value.Date;
-            var hasta = desde.AddDays(1);
-            movimientosQuery = movimientosQuery.Where(m => m.Fecha >= desde && m.Fecha < hasta);
+            movimientosQuery = movimientosQuery.Where(m =>
+                m.Prestamo != null && m.Prestamo.IdCliente == idCliente.Value);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            movimientosQuery = movimientosQuery.Where(m => m.Fecha >= fechaDesde.Value.Date);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hasta = fechaHasta.Value.Date.AddDays(1);
+            movimientosQuery = movimientosQuery.Where(m => m.Fecha < hasta);
         }
 
         if (idLibro.HasValue)
@@ -66,9 +80,10 @@ public class MovimientosStockController : Controller
                 ? movimientosQuery.OrderBy(m => m.Fecha).ThenBy(m => m.IdMovimientoStock)
                 : movimientosQuery.OrderByDescending(m => m.Fecha).ThenByDescending(m => m.IdMovimientoStock);
 
-        await CargarFiltrosAsync(idEmpleado, idLibro);
+        await CargarFiltrosAsync(idEmpleado, idCliente, idLibro);
 
-        ViewBag.FechaCreacionFiltro = fechaCreacion?.ToString("yyyy-MM-dd");
+        ViewBag.FechaDesdeFiltro = fechaDesde?.ToString("yyyy-MM-dd");
+        ViewBag.FechaHastaFiltro = fechaHasta?.ToString("yyyy-MM-dd");
         ViewBag.TipoMovimientoFiltro = tipoMovimiento?.ToString();
         ViewBag.Orden = criterioOrden;
         ViewBag.Direccion = ascendente ? "asc" : "desc";
@@ -95,6 +110,8 @@ public class MovimientosStockController : Controller
             .Include(m => m.Libro)
             .ThenInclude(l => l.Editorial)
             .Include(m => m.Empleado)
+            .Include(m => m.Prestamo)
+            .ThenInclude(p => p!.Cliente)
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.IdMovimientoStock == id);
 
@@ -113,7 +130,7 @@ public class MovimientosStockController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task CargarFiltrosAsync(int? idEmpleado, int? idLibro)
+    private async Task CargarFiltrosAsync(int? idEmpleado, int? idCliente, int? idLibro)
     {
         var empleados = await _context.Empleados
             .OrderBy(e => e.Nombre)
@@ -122,6 +139,16 @@ public class MovimientosStockController : Controller
             {
                 e.IdPersona,
                 NombreCompleto = $"{e.Nombre} {e.Apellido}"
+            })
+            .ToListAsync();
+
+        var clientes = await _context.Clientes
+            .OrderBy(c => c.Apellido)
+            .ThenBy(c => c.Nombre)
+            .Select(c => new
+            {
+                c.IdPersona,
+                Descripcion = $"{c.Nombre} {c.Apellido} - DNI {c.DNI}"
             })
             .ToListAsync();
 
@@ -135,8 +162,10 @@ public class MovimientosStockController : Controller
             .ToListAsync();
 
         ViewBag.Empleados = new SelectList(empleados, "IdPersona", "NombreCompleto", idEmpleado);
+        ViewBag.Clientes = new SelectList(clientes, "IdPersona", "Descripcion", idCliente);
         ViewBag.Libros = new SelectList(libros, "IdLibro", "Descripcion", idLibro);
         ViewBag.IdEmpleadoFiltro = idEmpleado;
+        ViewBag.IdClienteFiltro = idCliente;
         ViewBag.IdLibroFiltro = idLibro;
     }
 }

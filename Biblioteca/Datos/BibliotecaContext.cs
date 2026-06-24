@@ -118,6 +118,14 @@ public class BibliotecaContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<Cliente>()
+            .Property(e => e.Activo)
+            .HasColumnName("Activo");
+
+        modelBuilder.Entity<Empleado>()
+            .Property(e => e.Activo)
+            .HasColumnName("Activo");
+
         modelBuilder.Entity<ItemPrestamo>(entity =>
         {
             entity.HasKey(e => e.IdItemPrestamo);
@@ -157,6 +165,11 @@ public class BibliotecaContext : DbContext
                 .WithMany(e => e.MovimientosStock)
                 .HasForeignKey(e => e.IdEmpleado)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Prestamo)
+                .WithMany()
+                .HasForeignKey(e => e.IdPrestamo)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.ToTable(t =>
             {

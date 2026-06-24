@@ -35,7 +35,16 @@
                 {
                     <div class="table-actions">
                         <a asp-action="Edit" asp-route-id="@item.IdEditorial" class="btn btn-sm btn-outline-primary">Editar</a>
-                        <a asp-action="Delete" asp-route-id="@item.IdEditorial" class="btn btn-sm btn-outline-danger">Baja</a>
+                        @if (item.Activo)
+                        {
+                            <a asp-action="Delete" asp-route-id="@item.IdEditorial" class="btn btn-sm btn-outline-danger">Baja</a>
+                        }
+                        else
+                        {
+                            <form asp-action="Activar" asp-route-id="@item.IdEditorial" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                            </form>
+                        }
                     </div>
                 }
             </td>

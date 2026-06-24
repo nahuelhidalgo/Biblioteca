@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Dar de baja cliente";
+    var prestamosActivos = Model.Prestamos.Count(p => p.FechaDevolucion is null);
 }
 
 <h1>Dar de baja cliente</h1>
@@ -10,8 +11,16 @@
 
 @if (Model.Activo)
 {
-    <p>¿Confirma que desea dar de baja este cliente?</p>
-    <p class="text-muted">Su historial de prestamos se conservara, pero no podra seleccionarse para nuevos prestamos.</p>
+    <p>Para dar de baja un cliente, no debe tener préstamos activos.</p>
+    <p class="text-muted">La baja marca al cliente como inactivo para conservar su historial, pero no podrá seleccionarse para nuevos préstamos.</p>
+
+    if (prestamosActivos > 0)
+    {
+        <div class="alert alert-warning">
+            Este cliente tiene @prestamosActivos préstamo@(prestamosActivos == 1 ? "" : "s") activo@(prestamosActivos == 1 ? "" : "s").
+            Si intenta darlo de baja, la operación será rechazada hasta que esos préstamos se cierren.
+        </div>
+    }
 }
 else
 {
@@ -23,6 +32,8 @@ else
     <dd class="col-sm-9">@Model.NombreCompleto</dd>
     <dt class="col-sm-3">DNI</dt>
     <dd class="col-sm-9">@Model.DNI</dd>
+    <dt class="col-sm-3">Préstamos activos</dt>
+    <dd class="col-sm-9">@prestamosActivos</dd>
 </dl>
 
 <form asp-action="Delete" method="post">

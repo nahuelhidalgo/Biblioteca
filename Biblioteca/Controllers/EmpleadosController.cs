@@ -53,6 +53,8 @@ public class EmpleadosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("IdPersona,Nombre,Apellido,DNI,Telefono,Direccion")] Empleado empleado)
     {
+        await ValidarDniUnicoAsync(empleado.DNI);
+
         var cuenta = CuentasEmpleado.CrearEmail(empleado);
         var passwordInicial = CuentasEmpleado.CrearPasswordInicial(empleado);
 
@@ -66,6 +68,7 @@ public class EmpleadosController : Controller
             return View(empleado);
         }
 
+        empleado.Activo = true;
         empleado.Usuario = new Usuario
         {
             Email = cuenta,
@@ -101,12 +104,25 @@ public class EmpleadosController : Controller
             return NotFound();
         }
 
+        await ValidarDniUnicoAsync(empleado.DNI, empleado.IdPersona);
+
         if (!ModelState.IsValid)
         {
             return View(empleado);
         }
 
-        _context.Update(empleado);
+        var empleadoExistente = await _context.Empleados.FindAsync(id);
+
+        if (empleadoExistente is null)
+        {
+            return NotFound();
+        }
+
+        empleadoExistente.Nombre = empleado.Nombre;
+        empleadoExistente.Apellido = empleado.Apellido;
+        empleadoExistente.DNI = empleado.DNI;
+        empleadoExistente.Telefono = empleado.Telefono;
+        empleadoExistente.Direccion = empleado.Direccion;
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -141,14 +157,47 @@ public class EmpleadosController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        if (empleado.Usuario is not null || empleado.PrestamosRegistrados.Any() || empleado.MovimientosStock.Any())
+        if (empleado.Usuario?.Activo == true)
         {
-            ModelState.AddModelError(string.Empty, "No se puede eliminar un empleado con usuario, prestamos o movimientos asociados.");
+            ModelState.AddModelError(string.Empty, "Para eliminar el empleado, primero debe inactivar su usuario.");
             return View("Delete", empleado);
         }
 
-        _context.Empleados.Remove(empleado);
+        empleado.Activo = false;
         await _context.SaveChangesAsync();
+        TempData["Mensaje"] = "Empleado eliminado correctamente.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activar(int id)
+    {
+        var empleado = await _context.Empleados.FindAsync(id);
+
+        if (empleado is not null)
+        {
+            empleado.Activo = true;
+            await _context.SaveChangesAsync();
+            TempData["Mensaje"] = "Empleado activado correctamente.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task ValidarDniUnicoAsync(string dni, int? idPersonaActual = null)
+    {
+        if (string.IsNullOrWhiteSpace(dni))
+        {
+            return;
+        }
+
+        var dniEnUso = await _context.Personas.AnyAsync(p =>
+            p.DNI == dni && (!idPersonaActual.HasValue || p.IdPersona != idPersonaActual.Value));
+
+        if (dniEnUso)
+        {
+            ModelState.AddModelError(nameof(Persona.DNI), "Ya existe una persona registrada con ese DNI.");
+        }
     }
 }

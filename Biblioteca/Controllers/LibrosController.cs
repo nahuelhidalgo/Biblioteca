@@ -53,6 +53,10 @@ public class LibrosController : Controller
             .Include(l => l.Categoria)
             .Include(l => l.Editorial)
             .Include(l => l.MovimientosStock.OrderByDescending(m => m.Fecha))
+            .ThenInclude(m => m.Prestamo)
+            .ThenInclude(p => p!.Cliente)
+            .Include(l => l.MovimientosStock.OrderByDescending(m => m.Fecha))
+            .ThenInclude(m => m.Empleado)
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.IdLibro == id);
 
@@ -71,9 +75,11 @@ public class LibrosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("IdLibro,ISBN,Titulo,IdEditorial,IdCategoria,IdAutor,AnioPublicacion,Activo")] Libro libro)
     {
+        libro.ISBN = libro.ISBN.Trim();
         libro.StockTotal = 0;
         libro.StockDisponible = 0;
         LimpiarValidacionesDeNavegacion();
+        await ValidarIsbnUnicoAsync(libro.ISBN);
 
         if (!ModelState.IsValid)
         {
@@ -115,7 +121,9 @@ public class LibrosController : Controller
             return NotFound();
         }
 
+        libro.ISBN = libro.ISBN.Trim();
         LimpiarValidacionesDeNavegacion();
+        await ValidarIsbnUnicoAsync(libro.ISBN, libro.IdLibro);
 
         if (!ModelState.IsValid)
         {
@@ -160,6 +168,22 @@ public class LibrosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SesionAuthorize(RolesSistema.Administrador)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activar(int id)
+    {
+        var libro = await _context.Libros.FindAsync(id);
+
+        if (libro is not null)
+        {
+            libro.Activo = true;
+            await _context.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private async Task CargarListasAsync(Libro? libro = null)
     {
         ViewBag.IdAutor = new SelectList(
@@ -197,5 +221,21 @@ public class LibrosController : Controller
         ModelState.Remove(nameof(Libro.Editorial));
         ModelState.Remove(nameof(Libro.ItemsPrestamo));
         ModelState.Remove(nameof(Libro.MovimientosStock));
+    }
+
+    private async Task ValidarIsbnUnicoAsync(string isbn, int? idLibroActual = null)
+    {
+        if (string.IsNullOrWhiteSpace(isbn))
+        {
+            return;
+        }
+
+        var isbnEnUso = await _context.Libros.AnyAsync(l =>
+            l.ISBN == isbn && (!idLibroActual.HasValue || l.IdLibro != idLibroActual.Value));
+
+        if (isbnEnUso)
+        {
+            ModelState.AddModelError(nameof(Libro.ISBN), "Ya existe un libro registrado con ese ISBN.");
+        }
     }
 }

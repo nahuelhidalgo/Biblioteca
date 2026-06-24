@@ -16,8 +16,8 @@
             <th>Cuenta</th>
             <th>Rol</th>
             <th>Empleado</th>
-            <th>Activo</th>
-            <th>Ultimo acceso</th>
+            <th>Estado</th>
+            <th>Último acceso</th>
             <th></th>
         </tr>
     </thead>
@@ -28,13 +28,26 @@
             <td>@item.Email</td>
             <td>@item.Rol</td>
             <td>@item.Empleado.NombreCompleto</td>
-            <td>@(item.Activo ? "Si" : "No")</td>
+            <td>
+                <span class="badge @(item.Activo ? "text-bg-success" : "text-bg-secondary")">
+                    @(item.Activo ? "Activo" : "Inactivo")
+                </span>
+            </td>
             <td>@item.UltimoAcceso?.ToString("dd/MM/yyyy HH:mm")</td>
             <td class="text-end">
                 <div class="table-actions">
                     <a asp-action="Edit" asp-route-id="@item.IdUsuarioSistema" class="btn btn-sm btn-outline-primary">Editar</a>
                     <a asp-action="Details" asp-route-id="@item.IdUsuarioSistema" class="btn btn-sm btn-outline-secondary">Detalle</a>
-                    <a asp-action="Delete" asp-route-id="@item.IdUsuarioSistema" class="btn btn-sm btn-outline-danger">Baja</a>
+                    @if (item.Activo)
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.IdUsuarioSistema" class="btn btn-sm btn-outline-danger">Baja</a>
+                    }
+                    else
+                    {
+                        <form asp-action="Activar" asp-route-id="@item.IdUsuarioSistema" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                        </form>
+                    }
                 </div>
             </td>
         </tr>

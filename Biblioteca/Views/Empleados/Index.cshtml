@@ -15,14 +15,14 @@
     <a asp-action="Create" class="btn btn-primary">Crear empleado</a>
 </p>
 
-<table class="table table-striped">
+<table class="table table-striped align-middle">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Nombre</th>
             <th>DNI</th>
-            <th>Telefono</th>
+            <th>Teléfono</th>
             <th>Usuario</th>
+            <th>Estado</th>
             <th></th>
         </tr>
     </thead>
@@ -30,16 +30,29 @@
 @foreach (var item in Model)
 {
         <tr>
-            <td>@item.IdPersona</td>
             <td>@item.NombreCompleto</td>
             <td>@item.DNI</td>
             <td>@item.Telefono</td>
             <td>@item.Usuario?.Email</td>
+            <td>
+                <span class="badge @(item.Activo ? "text-bg-success" : "text-bg-secondary")">
+                    @(item.Activo ? "Activo" : "Inactivo")
+                </span>
+            </td>
             <td class="text-end">
                 <div class="table-actions">
                     <a asp-action="Edit" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-primary">Editar</a>
                     <a asp-action="Details" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-secondary">Detalle</a>
-                    <a asp-action="Delete" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                    @if (item.Activo)
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.IdPersona" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                    }
+                    else
+                    {
+                        <form asp-action="Activar" asp-route-id="@item.IdPersona" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                        </form>
+                    }
                 </div>
             </td>
         </tr>
